@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import BetterTabCore
 
 @main
 struct BetterTabApp: App {
