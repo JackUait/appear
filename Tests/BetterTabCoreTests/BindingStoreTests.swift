@@ -30,3 +30,15 @@ private let safari = AppBinding(combo: comboS, bundleID: "com.apple.Safari")
         try store.add(clash)
     }
 }
+
+@Test func removeAllEmptiesTheStore() throws {
+    let store = BindingStore()
+    try store.add(safari)
+    try store.add(AppBinding(
+        combo: KeyCombo(key: .t, modifiers: [.control, .option]),
+        bundleID: "com.apple.Terminal"
+    ))
+    store.removeAll()
+    #expect(store.all.isEmpty)
+    #expect(store.binding(for: comboS) == nil)
+}

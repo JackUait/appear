@@ -3,20 +3,20 @@ import AppKit
 
 @main
 struct BetterTabApp: App {
-    private let controller = AppController()
+    @StateObject private var model = BindingsModel()
 
     init() {
         // Menu-bar agent: no Dock icon, no main window.
         NSApplication.shared.setActivationPolicy(.accessory)
-        controller.start()
     }
 
     var body: some Scene {
-        MenuBarExtra("BetterTab", systemImage: "command") {
-            Text(controller.statusText)
-            Divider()
-            Button("Quit BetterTab") { NSApp.terminate(nil) }
-                .keyboardShortcut("q")
+        MenuBarExtra {
+            RootView()
+                .environmentObject(model)
+        } label: {
+            Image(systemName: "arrow.up.right.square")
         }
+        .menuBarExtraStyle(.window)
     }
 }

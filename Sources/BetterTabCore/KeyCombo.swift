@@ -1,5 +1,5 @@
 /// A keyboard shortcut: a key plus its modifier flags.
-public struct KeyCombo: Hashable, Sendable {
+public struct KeyCombo: Hashable, Sendable, Codable {
     public let key: Key
     public let modifiers: ModifierKey
 

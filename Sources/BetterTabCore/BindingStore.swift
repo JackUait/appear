@@ -22,6 +22,11 @@ public final class BindingStore {
         bindings[combo] = nil
     }
 
+    /// Removes every binding.
+    public func removeAll() {
+        bindings.removeAll()
+    }
+
     public func binding(for combo: KeyCombo) -> AppBinding? {
         bindings[combo]
     }

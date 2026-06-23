@@ -1,8 +1,13 @@
 # better-tab
 
-A bare-bones macOS menu-bar app: bind a global keyboard shortcut to an
-application and press it to jump to (activate/launch) that app. Ships with one
-live binding — **⌃⌥S → Safari**.
+A macOS menu-bar app: bind global keyboard shortcuts to applications and press
+one to jump to (activate/launch) that app.
+
+Click the menu-bar icon to open a dark "Night Console" popover where every
+shortcut is a backlit keycap. Add a binding by toggling modifier keycaps,
+tapping a key on the mini QWERTY keyboard, and picking a target app. Bindings
+persist across launches; a fresh install seeds **⌃⌥S → Safari** and
+**⌃⌥F → Finder**.
 
 ## Run from source
 

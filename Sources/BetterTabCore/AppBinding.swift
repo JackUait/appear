@@ -1,5 +1,5 @@
 /// Binds a keyboard shortcut to a target application (by bundle identifier).
-public struct AppBinding: Hashable, Sendable {
+public struct AppBinding: Hashable, Sendable, Codable {
     public let combo: KeyCombo
     public let bundleID: String
 

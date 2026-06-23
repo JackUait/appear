@@ -21,6 +21,22 @@ public final class HotKeyCoordinator {
     /// Stores the binding and registers its combo with the OS.
     public func install(_ binding: AppBinding) throws {
         try store.add(binding)
+        try registerHandler(for: binding)
+    }
+
+    /// Replaces all registrations with `bindings`: clears prior hotkeys and the
+    /// store, then registers each binding fresh. Used when the user edits the
+    /// set of bindings at runtime.
+    public func reload(_ bindings: [AppBinding]) throws {
+        registrar.unregisterAll()
+        store.removeAll()
+        for binding in bindings {
+            try store.add(binding)
+            try registerHandler(for: binding)
+        }
+    }
+
+    private func registerHandler(for binding: AppBinding) throws {
         try registrar.register(combo: binding.combo) { [weak self] in
             try? self?.handle(combo: binding.combo)
         }
