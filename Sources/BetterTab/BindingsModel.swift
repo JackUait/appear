@@ -54,6 +54,16 @@ final class BindingsModel: ObservableObject {
         apply(bindings.filter { $0 != binding })
     }
 
+    /// Edits an existing binding in place (combo and/or target). Rejects a combo
+    /// that collides with a *different* binding.
+    func update(_ old: AppBinding, combo: KeyCombo, bundleID: String) {
+        if combo != old.combo, bindings.contains(where: { $0.combo == combo }) {
+            errorMessage = "\(combo.description) is already bound."
+            return
+        }
+        apply(bindings.filter { $0 != old } + [AppBinding(combo: combo, bundleID: bundleID)])
+    }
+
     func isBound(_ combo: KeyCombo) -> Bool {
         bindings.contains { $0.combo == combo }
     }
