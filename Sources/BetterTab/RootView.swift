@@ -17,7 +17,11 @@ struct RootView: View {
             Divider()
 
             ScrollView {
-                VStack(spacing: 4) {
+                VStack(spacing: 3) {
+                    if model.bindings.isEmpty && !addingNew {
+                        empty
+                    }
+
                     ForEach(model.items) { item in
                         if editingID == item.id {
                             InlineEditor(
@@ -32,12 +36,13 @@ struct RootView: View {
                                 onDelete: { model.remove(item.binding); close() }
                             )
                             .padding(.vertical, 2)
+                            .transition(.opacity)
                         } else {
                             CompactRow(
                                 binding: item.binding,
                                 onJump: { model.jump(to: item.binding) },
                                 onEdit: { startEditing(item.id) },
-                                onDelete: { model.remove(item.binding) }
+                                onDelete: { withAnimation(.snappy) { model.remove(item.binding) } }
                             )
                         }
                     }
@@ -54,32 +59,37 @@ struct RootView: View {
                             onCancel: close
                         )
                         .padding(.vertical, 2)
+                        .transition(.opacity)
                     }
                 }
                 .padding(8)
+                .animation(.snappy(duration: 0.22), value: model.items)
             }
-            .frame(maxHeight: 400)
+            .frame(maxHeight: 420)
 
             Divider()
             footer
         }
-        .frame(width: 320)
+        .frame(width: 340)
         .background(VisualEffectBackground().ignoresSafeArea())
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .fill(.tint)
-                .frame(width: 28, height: 28)
+        HStack(spacing: 11) {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(LinearGradient(colors: [Color.accentColor, Color.accentColor.opacity(0.78)],
+                                     startPoint: .top, endPoint: .bottom))
+                .frame(width: 30, height: 30)
                 .overlay(
                     Image(systemName: "command")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                 )
-            VStack(alignment: .leading, spacing: 0) {
+                .shadow(color: Color.accentColor.opacity(0.35), radius: 4, y: 2)
+
+            VStack(alignment: .leading, spacing: 1) {
                 Text("BetterTab").font(.headline)
-                Text("^[\(model.bindings.count) shortcut](inflect: true)")
+                Text("Jump to your apps")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -99,7 +109,24 @@ struct RootView: View {
             .fixedSize()
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
+    }
+
+    private var empty: some View {
+        VStack(spacing: 7) {
+            Image(systemName: "command")
+                .font(.system(size: 24, weight: .light))
+                .foregroundStyle(.tertiary)
+            Text("No shortcuts yet")
+                .font(.callout.weight(.medium))
+            Text("Add one to jump to an app with a keystroke.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 26)
+        .padding(.horizontal, 20)
     }
 
     private var footer: some View {
@@ -107,7 +134,7 @@ struct RootView: View {
             Button {
                 close()
                 model.errorMessage = nil
-                withAnimation(.easeOut(duration: 0.18)) { addingNew = true }
+                withAnimation(.snappy) { addingNew = true }
             } label: {
                 Label("Add Shortcut", systemImage: "plus")
             }
@@ -127,12 +154,12 @@ struct RootView: View {
     private func startEditing(_ id: String) {
         model.errorMessage = nil
         addingNew = false
-        withAnimation(.easeOut(duration: 0.16)) { editingID = id }
+        withAnimation(.snappy) { editingID = id }
     }
 
     private func close() {
         model.errorMessage = nil
-        withAnimation(.easeOut(duration: 0.16)) {
+        withAnimation(.snappy) {
             editingID = nil
             addingNew = false
         }
@@ -145,7 +172,8 @@ struct RootView: View {
     }
 }
 
-/// A compact, tappable row: tap to jump; hover reveals edit & delete.
+/// A compact, tappable row: tap to jump; hover crossfades the shortcut into
+/// edit & delete controls.
 private struct CompactRow: View {
     let binding: AppBinding
     let onJump: () -> Void
@@ -155,39 +183,48 @@ private struct CompactRow: View {
     @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            AppIcon(bundleID: binding.bundleID, size: 26)
+        HStack(spacing: 11) {
+            AppIcon(bundleID: binding.bundleID, size: 28)
 
             Text(AppCatalog.name(forBundleID: binding.bundleID))
-                .font(.system(size: 13))
+                .font(.system(size: 13, weight: .medium))
+                .lineLimit(1)
 
             Spacer(minLength: 8)
 
-            if hovering {
-                iconButton("pencil", action: onEdit)
-                iconButton("trash", action: onDelete)
-            } else {
+            ZStack(alignment: .trailing) {
                 ShortcutView(combo: binding.combo)
+                    .opacity(hovering ? 0 : 1)
+                HStack(spacing: 4) {
+                    iconButton("pencil", help: "Edit", action: onEdit)
+                    iconButton("trash", help: "Delete", action: onDelete)
+                }
+                .opacity(hovering ? 1 : 0)
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 7)
-        .background(hovering ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear),
-                    in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(hovering ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear))
+        )
         .contentShape(Rectangle())
         .onTapGesture(perform: onJump)
         .onHover { hovering = $0 }
-        .animation(.easeOut(duration: 0.12), value: hovering)
+        .animation(.easeOut(duration: 0.13), value: hovering)
+        .help("Jump to \(AppCatalog.name(forBundleID: binding.bundleID))")
     }
 
-    private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
+    private func iconButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .frame(width: 24, height: 24)
+                .background(Circle().fill(.background.opacity(0.5)))
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .help(help)
     }
 }

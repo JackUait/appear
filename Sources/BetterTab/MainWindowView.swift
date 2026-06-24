@@ -55,6 +55,18 @@ struct MainWindowView: View {
                         }
                     }
                     .listStyle(.inset)
+                    .animation(.snappy(duration: 0.22), value: model.items)
+                    .safeAreaInset(edge: .bottom) {
+                        HStack {
+                            Text("^[\(model.bindings.count) shortcut](inflect: true)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(.bar)
+                    }
                 }
             }
             .navigationTitle("BetterTab")
@@ -67,7 +79,7 @@ struct MainWindowView: View {
                 }
             }
         }
-        .frame(minWidth: 480, idealWidth: 520, minHeight: 360)
+        .frame(minWidth: 520, idealWidth: 560, minHeight: 420)
         .sheet(item: $route) { route in
             switch route {
             case .add:
@@ -91,14 +103,14 @@ struct MainWindowView: View {
     }
 
     private func row(_ item: BindingItem) -> some View {
-        HStack(spacing: 10) {
-            AppIcon(bundleID: item.binding.bundleID, size: 28)
+        HStack(spacing: 12) {
+            AppIcon(bundleID: item.binding.bundleID, size: 32)
             Text(AppCatalog.name(forBundleID: item.binding.bundleID))
                 .font(.body)
             Spacer(minLength: 12)
             ShortcutView(combo: item.binding.combo)
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 5)
         .contentShape(Rectangle())
         .onTapGesture(count: 2) { route = .edit(item.binding) }
     }
