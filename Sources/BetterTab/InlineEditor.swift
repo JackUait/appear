@@ -9,6 +9,7 @@ struct InlineEditor: View {
     let onSave: (KeyCombo, String) -> Void
     let onCancel: () -> Void
     var onDelete: (() -> Void)?
+    var onPickerExpandedChange: (Bool) -> Void = { _ in }
 
     @State private var combo: KeyCombo?
     @State private var bundleID: String?
@@ -21,13 +22,15 @@ struct InlineEditor: View {
         error: String? = nil,
         onSave: @escaping (KeyCombo, String) -> Void,
         onCancel: @escaping () -> Void,
-        onDelete: (() -> Void)? = nil
+        onDelete: (() -> Void)? = nil,
+        onPickerExpandedChange: @escaping (Bool) -> Void = { _ in }
     ) {
         self.apps = apps
         self.error = error
         self.onSave = onSave
         self.onCancel = onCancel
         self.onDelete = onDelete
+        self.onPickerExpandedChange = onPickerExpandedChange
         self.isNew = existing == nil
 
         _combo = State(initialValue: existing?.combo)
@@ -40,7 +43,8 @@ struct InlineEditor: View {
         VStack(alignment: .leading, spacing: 9) {
             ShortcutRecorder(combo: $combo)
 
-            AppPicker(apps: apps, bundleID: $bundleID, listMaxHeight: 200)
+            AppPicker(apps: apps, bundleID: $bundleID, listMaxHeight: 200,
+                      onExpandedChange: onPickerExpandedChange)
 
             if let error {
                 Text(error)

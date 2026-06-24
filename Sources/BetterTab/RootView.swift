@@ -14,62 +14,92 @@ struct RootView: View {
 
     @State private var editingID: String?
     @State private var addingNew = false
+    @State private var pickerExpanded = false
+
+    private static let addEditorID = "addEditor"
+
+    /// A definite scroll-area height so the popover (via NSHostingController)
+    /// sizes correctly. A flexible/measured ScrollView collapses inside an
+    /// NSPopover, so we estimate: compact for the plain list, room for an open
+    /// editor, and extra room when its app list expands — capped to stay on
+    /// screen.
+    private var scrollHeight: CGFloat {
+        let rows = CGFloat(model.items.count)
+        guard addingNew || editingID != nil else {
+            return min(max(rows * 46 + 12, 60), 460)
+        }
+        let editor: CGFloat = pickerExpanded ? 480 : 190
+        return min(rows * 46 + editor, 600)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             header
             Divider()
 
-            ScrollView {
-                VStack(spacing: 3) {
-                    if model.bindings.isEmpty && !addingNew {
-                        empty
-                    }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 3) {
+                        if model.bindings.isEmpty && !addingNew {
+                            empty
+                        }
 
-                    ForEach(model.items) { item in
-                        if editingID == item.id {
+                        ForEach(model.items) { item in
+                            if editingID == item.id {
+                                InlineEditor(
+                                    apps: model.installedApps,
+                                    existing: item.binding,
+                                    error: model.errorMessage,
+                                    onSave: { combo, bundleID in
+                                        model.update(item.binding, combo: combo, bundleID: bundleID)
+                                        if model.errorMessage == nil { close() }
+                                    },
+                                    onCancel: close,
+                                    onDelete: { model.remove(item.binding); close() },
+                                    onPickerExpandedChange: { pickerExpanded = $0 }
+                                )
+                                .padding(.vertical, 2)
+                                .transition(.opacity)
+                                .id(item.id)
+                            } else {
+                                CompactRow(
+                                    binding: item.binding,
+                                    onJump: { model.jump(to: item.binding) },
+                                    onEdit: { startEditing(item.id) },
+                                    onDelete: { withAnimation(.snappy) { model.remove(item.binding) } }
+                                )
+                            }
+                        }
+
+                        if addingNew {
                             InlineEditor(
                                 apps: model.installedApps,
-                                existing: item.binding,
+                                existing: nil,
                                 error: model.errorMessage,
                                 onSave: { combo, bundleID in
-                                    model.update(item.binding, combo: combo, bundleID: bundleID)
+                                    model.add(combo: combo, bundleID: bundleID)
                                     if model.errorMessage == nil { close() }
                                 },
                                 onCancel: close,
-                                onDelete: { model.remove(item.binding); close() }
+                                onPickerExpandedChange: { pickerExpanded = $0 }
                             )
                             .padding(.vertical, 2)
                             .transition(.opacity)
-                        } else {
-                            CompactRow(
-                                binding: item.binding,
-                                onJump: { model.jump(to: item.binding) },
-                                onEdit: { startEditing(item.id) },
-                                onDelete: { withAnimation(.snappy) { model.remove(item.binding) } }
-                            )
+                            .id(Self.addEditorID)
                         }
                     }
-
-                    if addingNew {
-                        InlineEditor(
-                            apps: model.installedApps,
-                            existing: nil,
-                            error: model.errorMessage,
-                            onSave: { combo, bundleID in
-                                model.add(combo: combo, bundleID: bundleID)
-                                if model.errorMessage == nil { close() }
-                            },
-                            onCancel: close
-                        )
-                        .padding(.vertical, 2)
-                        .transition(.opacity)
-                    }
+                    .padding(8)
+                    .animation(.snappy(duration: 0.22), value: model.items)
                 }
-                .padding(8)
-                .animation(.snappy(duration: 0.22), value: model.items)
+                .frame(height: scrollHeight)
+                .animation(.snappy(duration: 0.2), value: scrollHeight)
+                .onChange(of: addingNew) { _, isAdding in
+                    if isAdding { withAnimation(.snappy) { proxy.scrollTo(Self.addEditorID, anchor: .bottom) } }
+                }
+                .onChange(of: editingID) { _, id in
+                    if let id { withAnimation(.snappy) { proxy.scrollTo(id, anchor: .center) } }
+                }
             }
-            .frame(maxHeight: 420)
 
             Divider()
             footer
@@ -166,6 +196,7 @@ struct RootView: View {
     private func close() {
         model.errorMessage = nil
         model.isEditing = false
+        pickerExpanded = false
         withAnimation(.snappy) {
             editingID = nil
             addingNew = false
