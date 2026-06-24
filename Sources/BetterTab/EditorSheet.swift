@@ -32,11 +32,9 @@ struct EditorSheet: View {
                 }
 
                 Section("Target") {
-                    Picker("Application", selection: $bundleID) {
-                        Text("Choose…").tag(String?.none)
-                        ForEach(model.installedApps) { app in
-                            Text(app.name).tag(String?.some(app.bundleID))
-                        }
+                    LabeledContent("Application") {
+                        AppPicker(apps: model.installedApps, bundleID: $bundleID)
+                            .frame(maxWidth: 260)
                     }
                 }
 

@@ -40,7 +40,7 @@ struct InlineEditor: View {
         VStack(alignment: .leading, spacing: 9) {
             ShortcutRecorder(combo: $combo)
 
-            appMenu
+            AppPicker(apps: apps, bundleID: $bundleID, listMaxHeight: 200)
 
             if let error {
                 Text(error)
@@ -70,26 +70,5 @@ struct InlineEditor: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(.separator, lineWidth: 0.5)
         )
-    }
-
-    private var appMenu: some View {
-        Menu {
-            ForEach(apps) { app in
-                Button(app.name) { bundleID = app.bundleID }
-            }
-        } label: {
-            HStack(spacing: 7) {
-                if let bundleID {
-                    AppIcon(bundleID: bundleID, size: 17)
-                    Text(AppCatalog.name(forBundleID: bundleID))
-                } else {
-                    Image(systemName: "app.dashed").foregroundStyle(.secondary)
-                    Text("Choose an app").foregroundStyle(.secondary)
-                }
-            }
-        }
-        .menuStyle(.button)
-        .buttonStyle(.bordered)
-        .controlSize(.small)
     }
 }
