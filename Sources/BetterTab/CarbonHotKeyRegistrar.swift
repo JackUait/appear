@@ -2,9 +2,11 @@ import AppKit
 import Carbon.HIToolbox
 import BetterTabCore
 
-/// Errors from the Carbon hotkey backend.
+/// Errors from the hotkey backends.
 enum HotKeyRegistrarError: Error {
     case registrationFailed(status: OSStatus)
+    /// A multi-key chord needs the event tap, which needs Accessibility access.
+    case accessibilityNotGranted
 }
 
 /// Real `HotKeyRegistering` backed by Carbon's `RegisterEventHotKey`.
@@ -45,6 +47,11 @@ final class CarbonHotKeyRegistrar: HotKeyRegistering {
     }
 
     func register(combo: KeyCombo, handler: @escaping () -> Void) throws {
+        // Carbon expresses only a single key plus modifiers; multi-key chords
+        // are the event tap's job and should never reach here.
+        guard let key = combo.keys.first, !combo.requiresEventTap else {
+            throw HotKeyRegistrarError.registrationFailed(status: OSStatus(paramErr))
+        }
         let id = nextID
         nextID += 1
         handlers[id] = handler
@@ -52,7 +59,7 @@ final class CarbonHotKeyRegistrar: HotKeyRegistering {
         let hotKeyID = EventHotKeyID(signature: OSType(0x42544142 /* "BTAB" */), id: id)
         var ref: EventHotKeyRef?
         let status = RegisterEventHotKey(
-            combo.key.virtualKeyCode,
+            key.virtualKeyCode,
             carbonMask(for: combo.modifiers),
             hotKeyID,
             GetApplicationEventTarget(),

@@ -25,7 +25,8 @@ struct KeyCap: View {
     }
 }
 
-/// Renders a `KeyCombo` as macOS-style key caps: modifier glyphs then the key.
+/// Renders a `KeyCombo` as macOS-style key caps: modifier glyphs, then each
+/// key in the chord.
 struct ShortcutView: View {
     let combo: KeyCombo
     var emphasized = false
@@ -35,7 +36,9 @@ struct ShortcutView: View {
             ForEach(Array(combo.modifiers.symbols.map(String.init).enumerated()), id: \.offset) { _, glyph in
                 KeyCap(label: glyph, emphasized: emphasized)
             }
-            KeyCap(label: combo.key.label, emphasized: emphasized)
+            ForEach(Array(combo.keys.enumerated()), id: \.offset) { _, key in
+                KeyCap(label: key.label, emphasized: emphasized)
+            }
         }
     }
 }

@@ -29,6 +29,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // promotes the app to a regular app while it's open.
         NSApp.setActivationPolicy(.accessory)
         statusController = StatusItemController(model: model)
+
+        // After the user grants Accessibility (in System Settings), re-register
+        // so any multi-key chord starts working without a relaunch.
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.model.reapplyHotkeysIfNeeded() }
+        }
     }
 
     /// Keep the menu-bar agent alive when the popover or standalone window

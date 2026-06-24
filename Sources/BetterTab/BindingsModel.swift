@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import BetterTabCore
 
 /// Identifiable wrapper so a binding can drive `List`/`Table` selection.
@@ -20,9 +21,14 @@ final class BindingsModel: ObservableObject {
     /// on outside clicks mid-edit.
     @Published var isEditing = false
 
+    /// True when a saved multi-key chord can't run because Accessibility access
+    /// hasn't been granted. Drives the in-popover permission banner.
+    @Published private(set) var needsAccessibility = false
+
     private let store = BindingStore()
-    private let registrar = CarbonHotKeyRegistrar()
+    private let registrar = CompositeHotKeyRegistrar()
     private let activator = WorkspaceAppActivator()
+    private var didPromptAccessibility = false
     private lazy var coordinator = HotKeyCoordinator(
         store: store, registrar: registrar, activator: activator
     )
@@ -97,6 +103,14 @@ final class BindingsModel: ObservableObject {
     /// Identifiable rows for `List`/`Table`.
     var items: [BindingItem] { bindings.map(BindingItem.init) }
 
+    /// Re-applies registrations after the user grants Accessibility, so a
+    /// multi-key chord that couldn't install at first starts working without a
+    /// relaunch. Called when the app becomes active.
+    func reapplyHotkeysIfNeeded() {
+        guard registrar.needsAccessibility, ChordEventTapMonitor.isTrusted else { return }
+        apply(bindings)
+    }
+
     /// Re-registers every hotkey from `next`, then persists. Sorted by app name.
     private func apply(_ next: [AppBinding]) {
         do {
@@ -108,8 +122,23 @@ final class BindingsModel: ObservableObject {
             }
             repository.save(bindings)
             errorMessage = nil
+            needsAccessibility = registrar.needsAccessibility
+            if needsAccessibility { promptForAccessibilityOnce() }
         } catch {
             errorMessage = "Couldn't update shortcuts: \(error)"
         }
+    }
+
+    private func promptForAccessibilityOnce() {
+        guard !didPromptAccessibility else { return }
+        didPromptAccessibility = true
+        ChordEventTapMonitor.promptForAccessibility()
+    }
+
+    /// Opens System Settings at the Accessibility pane so the user can grant
+    /// access for multi-key chords.
+    func openAccessibilitySettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+        NSWorkspace.shared.open(url)
     }
 }

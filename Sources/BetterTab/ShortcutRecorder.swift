@@ -3,9 +3,11 @@ import AppKit
 import BetterTabCore
 
 /// A click-to-record shortcut field. While recording, a local event monitor
-/// captures the next real keystroke (a supported key plus at least one
-/// modifier) and reports it as a `KeyCombo` — no modifier checkboxes or key
-/// menus. Events are swallowed while recording so they neither type nor beep.
+/// captures the keys held down together and reports them as a `KeyCombo` — a
+/// single key with modifiers (`⌃⌥F`) or a multi-key chord (`G+L+M+N+R`). The
+/// chord is captured when the keys are released (or once five are held), so the
+/// order they go down doesn't matter. Events are swallowed while recording so
+/// they neither type nor beep.
 struct ShortcutRecorder: View {
     @Binding var combo: KeyCombo?
 
@@ -14,8 +16,14 @@ struct ShortcutRecorder: View {
     /// hotkey swallows the keystroke before it reaches us.
     var onRecordingChange: (Bool) -> Void = { _ in }
 
+    /// The most keys a single chord may hold.
+    private static let maxKeys = 5
+
     @State private var recording = false
     @State private var liveModifiers: ModifierKey = []
+    @State private var heldKeys: [Key] = []
+    @State private var peakKeys: [Key] = []
+    @State private var peakModifiers: ModifierKey = []
     @State private var monitor: Any?
 
     var body: some View {
@@ -43,17 +51,22 @@ struct ShortcutRecorder: View {
     @ViewBuilder private var content: some View {
         if recording {
             HStack(spacing: 6) {
-                if liveModifiers.isEmpty {
-                    Text("Type a shortcut…")
+                if liveModifiers.isEmpty && heldKeys.isEmpty {
+                    Text("Press keys…")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(Array(liveModifiers.symbols.map(String.init).enumerated()), id: \.offset) { _, glyph in
                         KeyCap(label: glyph, emphasized: true)
                     }
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(.tint, style: StrokeStyle(lineWidth: 1, dash: [3]))
-                        .frame(width: 22, height: 22)
+                    ForEach(Array(heldKeys.enumerated()), id: \.offset) { _, key in
+                        KeyCap(label: key.label, emphasized: true)
+                    }
+                    if heldKeys.count < Self.maxKeys {
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .strokeBorder(.tint, style: StrokeStyle(lineWidth: 1, dash: [3]))
+                            .frame(width: 22, height: 22)
+                    }
                 }
                 Spacer(minLength: 6)
                 Text("esc")
@@ -87,9 +100,12 @@ struct ShortcutRecorder: View {
     private func startRecording() {
         guard !recording else { return }
         liveModifiers = []
+        heldKeys = []
+        peakKeys = []
+        peakModifiers = []
         recording = true
         onRecordingChange(true)
-        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { event in
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { event in
             handle(event)
         }
     }
@@ -98,10 +114,21 @@ struct ShortcutRecorder: View {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
         liveModifiers = []
+        heldKeys = []
+        peakKeys = []
+        peakModifiers = []
         if recording {
             recording = false
             onRecordingChange(false)
         }
+    }
+
+    /// Commits the largest set of keys seen this press, if it's a usable
+    /// shortcut (has a modifier, or is a chord of two or more keys).
+    private func finalizeChord() {
+        defer { stopRecording() }
+        guard !peakModifiers.isEmpty || peakKeys.count >= 2 else { return }
+        combo = KeyCombo(keys: peakKeys, modifiers: peakModifiers)
     }
 
     /// Returns nil to swallow the event (no beep, no typed character) whenever
@@ -111,17 +138,32 @@ struct ShortcutRecorder: View {
         case .flagsChanged:
             liveModifiers = Self.modifiers(from: event.modifierFlags)
             return nil
+
+        case .keyUp:
+            let key = Key(virtualKeyCode: UInt32(event.keyCode))
+            heldKeys.removeAll { $0 == key }
+            // Once every key is up, commit the chord that was assembled.
+            if heldKeys.isEmpty { finalizeChord() }
+            return nil
+
         case .keyDown:
             if event.keyCode == 53 { stopRecording(); return nil } // Escape cancels
-            let mods = Self.modifiers(from: event.modifierFlags)
-            // Require at least one modifier — a bare key is no use as a global
-            // launcher hotkey. Keep listening until the user holds one.
-            guard !mods.isEmpty,
-                  let captured = KeyCombo(virtualKeyCode: UInt32(event.keyCode), modifiers: mods)
-            else { return nil }
-            combo = captured
-            stopRecording()
+            if event.isARepeat { return nil }
+            let key = Key(virtualKeyCode: UInt32(event.keyCode))
+            // Modifiers arrive via flagsChanged; ignore them as chord keys.
+            guard !key.isModifierKey else { return nil }
+
+            if !heldKeys.contains(key), heldKeys.count < Self.maxKeys {
+                heldKeys.append(key)
+            }
+            if heldKeys.count >= peakKeys.count {
+                peakKeys = heldKeys
+                peakModifiers = Self.modifiers(from: event.modifierFlags)
+            }
+            // A full five-key chord can't grow further — commit immediately.
+            if heldKeys.count >= Self.maxKeys { finalizeChord() }
             return nil
+
         default:
             return event
         }

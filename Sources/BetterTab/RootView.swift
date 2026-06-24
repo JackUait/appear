@@ -37,6 +37,11 @@ struct RootView: View {
             header
             Divider()
 
+            if model.needsAccessibility {
+                accessibilityBanner
+                Divider()
+            }
+
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: 3) {
@@ -146,6 +151,30 @@ struct RootView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
+    }
+
+    private var accessibilityBanner: some View {
+        HStack(alignment: .top, spacing: 9) {
+            Image(systemName: "exclamationmark.shield.fill")
+                .font(.system(size: 15))
+                .foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Multi-key chords need Accessibility")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Grant BetterTab access, then your chords work everywhere.")
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Open Accessibility Settings") { model.openAccessibilitySettings() }
+                    .buttonStyle(.link)
+                    .font(.system(size: 11, weight: .medium))
+                    .padding(.top, 1)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.orange.opacity(0.08))
     }
 
     private var empty: some View {
