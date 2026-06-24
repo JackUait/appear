@@ -13,8 +13,8 @@ struct AppIcon: View {
                     .interpolation(.high)
             } else {
                 RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                    .fill(AirTheme.bgSubtle)
-                    .overlay(Image(systemName: "app.dashed").foregroundStyle(AirTheme.textFaint))
+                    .fill(.quaternary)
+                    .overlay(Image(systemName: "app.dashed").foregroundStyle(.tertiary))
             }
         }
         .frame(width: size, height: size)

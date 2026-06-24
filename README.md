@@ -3,15 +3,17 @@
 A macOS menu-bar app: bind global keyboard shortcuts to applications and press
 one to jump to (activate/launch) that app.
 
-An Airbnb-inspired interface (warm white surfaces, the coral accent, rounded
-type, soft shadows) across two surfaces, both fully editable:
+A refined, modern macOS interface following Apple's guidelines — vibrancy
+materials, SF Pro, the system accent color, light/dark adaptive — across two
+surfaces:
 
-- **Menu-bar popover** — a compact list. Tap a row to jump to that app; hover to
-  reveal edit/delete; add or edit a shortcut **inline** without leaving the
-  popover (circular modifier toggles, key/app pickers, a coral "Add" pill).
-- **Standalone window** — a roomy view of shortcut cards with the same inline
-  editor. While it's open the app is a regular Dock app; it returns to a
-  menu-bar agent on close.
+- **Menu-bar popover** — a vibrant compact list. Tap a row to jump to that app;
+  hover to reveal edit/delete; add or edit a shortcut **inline** without leaving
+  the popover (native modifier toggles, key/app popups).
+- **Standalone window** — a `NavigationStack` with a unified toolbar, search,
+  and an inset list. Add/edit via a grouped `Form` sheet; right-click for
+  context actions. While it's open the app is a regular Dock app; it returns to
+  a menu-bar agent on close.
 
 Bindings persist across launches; a fresh install seeds **⌃⌥S → Safari** and
 **⌃⌥F → Finder**.

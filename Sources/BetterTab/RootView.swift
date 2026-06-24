@@ -2,9 +2,8 @@ import SwiftUI
 import AppKit
 import BetterTabCore
 
-/// The menu-bar popover, re-imagined Airbnb-style and fully editable inline:
-/// tap a row to jump, hover to edit/delete, or add a shortcut — all without
-/// leaving the compact view.
+/// The menu-bar popover: a vibrant, modern macOS surface. Tap a row to jump,
+/// hover to edit/delete, or add — editable inline without leaving the popover.
 struct RootView: View {
     @EnvironmentObject var model: BindingsModel
     @Environment(\.openWindow) private var openWindow
@@ -15,26 +14,24 @@ struct RootView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider().overlay(AirTheme.border)
+            Divider()
 
             ScrollView {
-                VStack(spacing: 8) {
+                VStack(spacing: 4) {
                     ForEach(model.items) { item in
                         if editingID == item.id {
-                            BindingEditor(
+                            InlineEditor(
                                 apps: model.installedApps,
                                 existing: item.binding,
                                 error: model.errorMessage,
                                 onSave: { combo, bundleID in
                                     model.update(item.binding, combo: combo, bundleID: bundleID)
-                                    if model.errorMessage == nil { closeEditors() }
+                                    if model.errorMessage == nil { close() }
                                 },
-                                onCancel: closeEditors,
-                                onDelete: {
-                                    model.remove(item.binding)
-                                    closeEditors()
-                                }
+                                onCancel: close,
+                                onDelete: { model.remove(item.binding); close() }
                             )
+                            .padding(.vertical, 2)
                         } else {
                             CompactRow(
                                 binding: item.binding,
@@ -46,43 +43,45 @@ struct RootView: View {
                     }
 
                     if addingNew {
-                        BindingEditor(
+                        InlineEditor(
                             apps: model.installedApps,
                             existing: nil,
                             error: model.errorMessage,
                             onSave: { combo, bundleID in
                                 model.add(combo: combo, bundleID: bundleID)
-                                if model.errorMessage == nil { closeEditors() }
+                                if model.errorMessage == nil { close() }
                             },
-                            onCancel: closeEditors
+                            onCancel: close
                         )
+                        .padding(.vertical, 2)
                     }
                 }
-                .padding(12)
+                .padding(8)
             }
             .frame(maxHeight: 400)
 
+            Divider()
             footer
         }
-        .frame(width: 322)
-        .background(AirTheme.bg)
+        .frame(width: 320)
+        .background(VisualEffectBackground().ignoresSafeArea())
     }
 
     private var header: some View {
         HStack(spacing: 10) {
-            Image(systemName: "bolt.fill")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 30, height: 30)
-                .background(Circle().fill(AirTheme.coralGradient))
-
+            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(.tint)
+                .frame(width: 28, height: 28)
+                .overlay(
+                    Image(systemName: "command")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                )
             VStack(alignment: .leading, spacing: 0) {
-                Text("Shortcuts")
-                    .font(AirTheme.font(17, .bold))
-                    .foregroundStyle(AirTheme.textPrimary)
-                Text("Tap to jump • hover to edit")
-                    .font(AirTheme.font(11))
-                    .foregroundStyle(AirTheme.textSecondary)
+                Text("BetterTab").font(.headline)
+                Text("^[\(model.bindings.count) shortcut](inflect: true)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Menu {
@@ -91,41 +90,38 @@ struct RootView: View {
                 Button("Quit BetterTab") { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
             } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(AirTheme.textSecondary)
-                    .frame(width: 30, height: 30)
-                    .background(Circle().strokeBorder(AirTheme.border, lineWidth: 1))
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
     }
 
     private var footer: some View {
-        VStack(spacing: 0) {
-            Divider().overlay(AirTheme.border)
-            HStack {
-                Button {
-                    closeEditors()
-                    model.errorMessage = nil
-                    withAnimation(.easeOut(duration: 0.18)) { addingNew = true }
-                } label: {
-                    Label("Add a shortcut", systemImage: "plus")
-                }
-                .buttonStyle(AirPrimaryButton())
-
-                Spacer()
-
-                Button("Open window") { openEditor() }
-                    .buttonStyle(AirTextButton(tint: AirTheme.textSecondary))
+        HStack {
+            Button {
+                close()
+                model.errorMessage = nil
+                withAnimation(.easeOut(duration: 0.18)) { addingNew = true }
+            } label: {
+                Label("Add Shortcut", systemImage: "plus")
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+
+            Spacer()
+
+            Button("Open Window") { openEditor() }
+                .buttonStyle(.link)
+                .controlSize(.small)
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
     }
 
     private func startEditing(_ id: String) {
@@ -134,7 +130,7 @@ struct RootView: View {
         withAnimation(.easeOut(duration: 0.16)) { editingID = id }
     }
 
-    private func closeEditors() {
+    private func close() {
         model.errorMessage = nil
         withAnimation(.easeOut(duration: 0.16)) {
             editingID = nil
@@ -159,12 +155,11 @@ private struct CompactRow: View {
     @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 11) {
-            AppIcon(bundleID: binding.bundleID, size: 30)
+        HStack(spacing: 10) {
+            AppIcon(bundleID: binding.bundleID, size: 26)
 
             Text(AppCatalog.name(forBundleID: binding.bundleID))
-                .font(AirTheme.font(14, .medium))
-                .foregroundStyle(AirTheme.textPrimary)
+                .font(.system(size: 13))
 
             Spacer(minLength: 8)
 
@@ -172,19 +167,13 @@ private struct CompactRow: View {
                 iconButton("pencil", action: onEdit)
                 iconButton("trash", action: onDelete)
             } else {
-                ShortcutChips(combo: binding.combo)
+                ShortcutView(combo: binding.combo)
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(hovering ? AirTheme.bgSubtle : AirTheme.bg)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(AirTheme.border, lineWidth: 1)
-        )
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(hovering ? AnyShapeStyle(.quaternary) : AnyShapeStyle(.clear),
+                    in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture(perform: onJump)
         .onHover { hovering = $0 }
@@ -194,11 +183,10 @@ private struct CompactRow: View {
     private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AirTheme.textPrimary)
-                .frame(width: 30, height: 30)
-                .background(Circle().fill(AirTheme.bg))
-                .overlay(Circle().strokeBorder(AirTheme.border, lineWidth: 1))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
