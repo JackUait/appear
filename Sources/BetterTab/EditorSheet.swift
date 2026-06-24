@@ -9,37 +9,14 @@ struct EditorSheet: View {
 
     let existing: AppBinding?
 
-    @State private var control: Bool
-    @State private var option: Bool
-    @State private var shift: Bool
-    @State private var command: Bool
-    @State private var key: Key?
+    @State private var combo: KeyCombo?
     @State private var bundleID: String?
     @State private var error: String?
 
     init(existing: AppBinding?) {
         self.existing = existing
-        let mods = existing?.combo.modifiers ?? [.command, .option]
-        _control = State(initialValue: mods.contains(.control))
-        _option = State(initialValue: mods.contains(.option))
-        _shift = State(initialValue: mods.contains(.shift))
-        _command = State(initialValue: mods.contains(.command))
-        _key = State(initialValue: existing?.combo.key)
+        _combo = State(initialValue: existing?.combo)
         _bundleID = State(initialValue: existing?.bundleID)
-    }
-
-    private var modifiers: ModifierKey {
-        var m = ModifierKey()
-        if control { m.insert(.control) }
-        if option { m.insert(.option) }
-        if shift { m.insert(.shift) }
-        if command { m.insert(.command) }
-        return m
-    }
-
-    private var combo: KeyCombo? {
-        guard let key, !modifiers.isEmpty else { return nil }
-        return KeyCombo(key: key, modifiers: modifiers)
     }
 
     private var isValid: Bool { combo != nil && bundleID != nil }
@@ -48,19 +25,9 @@ struct EditorSheet: View {
         VStack(spacing: 0) {
             Form {
                 Section("Trigger") {
-                    LabeledContent("Modifiers") {
-                        HStack(spacing: 14) {
-                            Toggle("⌃", isOn: $control).toggleStyle(.checkbox)
-                            Toggle("⌥", isOn: $option).toggleStyle(.checkbox)
-                            Toggle("⇧", isOn: $shift).toggleStyle(.checkbox)
-                            Toggle("⌘", isOn: $command).toggleStyle(.checkbox)
-                        }
-                    }
-                    Picker("Key", selection: $key) {
-                        Text("Choose…").tag(Key?.none)
-                        ForEach(Key.allCases, id: \.self) { key in
-                            Text(key.label).tag(Key?.some(key))
-                        }
+                    LabeledContent("Shortcut") {
+                        ShortcutRecorder(combo: $combo)
+                            .frame(maxWidth: 220)
                     }
                 }
 

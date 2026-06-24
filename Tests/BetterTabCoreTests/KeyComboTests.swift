@@ -18,3 +18,14 @@ import Testing
     let combo = KeyCombo(key: .s, modifiers: [.control, .option])
     #expect(combo.description == "⌃⌥S")
 }
+
+@Test func capturingSupportedKeyCodeBuildsCombo() {
+    // 0x01 is the virtual key code for "S".
+    let combo = KeyCombo(virtualKeyCode: 0x01, modifiers: [.control, .option])
+    #expect(combo == KeyCombo(key: .s, modifiers: [.control, .option]))
+}
+
+@Test func capturingUnsupportedKeyCodeReturnsNil() {
+    // 0x12 is the virtual key code for "1", which is not a supported Key.
+    #expect(KeyCombo(virtualKeyCode: 0x12, modifiers: [.command]) == nil)
+}
