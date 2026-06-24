@@ -92,12 +92,17 @@ struct MainWindowView: View {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)) { note in
+            // Only react when the standalone window itself closes. Ignoring the
+            // borderless popover's close avoids a race where reverting to
+            // `.accessory` orders the just-opened window out.
+            guard let closing = note.object as? NSWindow,
+                  closing.styleMask.contains(.titled), !(closing is NSPanel) else { return }
             DispatchQueue.main.async {
-                let hasVisibleWindow = NSApp.windows.contains {
-                    $0.isVisible && $0.styleMask.contains(.titled) && !($0 is NSPanel)
+                let hasOtherTitledWindow = NSApp.windows.contains {
+                    $0 != closing && $0.isVisible && $0.styleMask.contains(.titled) && !($0 is NSPanel)
                 }
-                if !hasVisibleWindow { NSApp.setActivationPolicy(.accessory) }
+                if !hasOtherTitledWindow { NSApp.setActivationPolicy(.accessory) }
             }
         }
     }
