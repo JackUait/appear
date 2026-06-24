@@ -1,6 +1,6 @@
 import AppKit
 import SwiftUI
-import BetterTabCore
+import AppearCore
 
 /// Owns the menu-bar status item and the popover that hosts `RootView`.
 ///
@@ -22,7 +22,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         super.init()
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "command", accessibilityDescription: "BetterTab")
+            button.image = NSImage(systemSymbolName: "command", accessibilityDescription: "Appear")
             button.imagePosition = .imageOnly
             button.target = self
             button.action = #selector(togglePopover)

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import BetterTabCore
+@testable import AppearCore
 
 // MARK: - Test doubles
 

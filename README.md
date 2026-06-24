@@ -1,4 +1,4 @@
-# better-tab
+# Appear
 
 A macOS menu-bar app: bind global keyboard shortcuts to applications and press
 one to jump to (activate/launch) that app.
@@ -21,11 +21,11 @@ Bindings persist across launches; a fresh install seeds **⌃⌥S → Safari** a
 ## Run from source
 
 ```bash
-swift run BetterTab
+swift run Appear
 ```
 
 A ⌘ icon appears in the menu bar (no Dock icon). Press **⌃⌥S** to jump to
-Safari. Stop with Ctrl-C or the **Quit BetterTab** menu item.
+Safari. Stop with Ctrl-C or the **Quit Appear** menu item.
 
 ## Test
 
@@ -35,12 +35,12 @@ swift test
 
 ## Package as a .app
 
-Assembles a signed `dist/BetterTab.app` (menu-bar agent via `LSUIElement`,
+Assembles a signed `dist/Appear.app` (menu-bar agent via `LSUIElement`,
 ad-hoc code signature):
 
 ```bash
 scripts/package-app.sh           # release build
-open dist/BetterTab.app          # launch it
+open dist/Appear.app          # launch it
 
 CONFIG=debug scripts/package-app.sh   # debug build instead
 ```

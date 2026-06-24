@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import BetterTabCore
+@testable import AppearCore
 
 @Test func appBindingSurvivesJSONRoundTrip() throws {
     let original = AppBinding(

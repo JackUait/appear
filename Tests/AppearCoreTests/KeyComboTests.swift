@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@testable import BetterTabCore
+@testable import AppearCore
 
 @Test func modifierSymbolsAreInCanonicalOrder() {
     let mods: ModifierKey = [.command, .control, .shift, .option]

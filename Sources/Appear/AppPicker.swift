@@ -1,5 +1,5 @@
 import SwiftUI
-import BetterTabCore
+import AppearCore
 
 /// A searchable application chooser. Collapsed, it shows the selected app (icon
 /// + name); tapped, it expands into a focused search field over a filtered,

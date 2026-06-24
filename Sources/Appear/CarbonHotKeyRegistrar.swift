@@ -1,6 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
-import BetterTabCore
+import AppearCore
 
 /// Errors from the hotkey backends.
 enum HotKeyRegistrarError: Error {

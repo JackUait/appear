@@ -2,11 +2,11 @@ import SwiftUI
 import AppKit
 
 @main
-struct BetterTabApp: App {
+struct AppearApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        Window("BetterTab", id: "main") {
+        Window("Appear", id: "main") {
             MainWindowView()
                 .environmentObject(appDelegate.model)
         }

@@ -1,4 +1,4 @@
-import BetterTabCore
+import AppearCore
 
 /// Routes each shortcut to the backend that can express it: single-key combos
 /// go to Carbon (no permission needed); multi-key chords go to the event tap

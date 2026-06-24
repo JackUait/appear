@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// A click-to-record shortcut field. While recording, a local event monitor
 /// captures the keys held down together and reports them as a `KeyCombo` — a

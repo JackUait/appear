@@ -1,5 +1,5 @@
 import SwiftUI
-import BetterTabCore
+import AppearCore
 
 /// Add/edit sheet for the standalone window: a grouped `Form` with checkbox
 /// modifiers, key & application pickers, and a live preview.

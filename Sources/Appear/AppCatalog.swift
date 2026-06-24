@@ -1,5 +1,5 @@
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// A user-installed application the user can bind a shortcut to.
 struct InstalledApp: Identifiable, Hashable {

@@ -1,5 +1,5 @@
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// Real `AppActivating` backed by `NSWorkspace` / `NSRunningApplication`.
 struct WorkspaceAppActivator: AppActivating {

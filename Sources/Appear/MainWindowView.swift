@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// The standalone window: a NavigationStack with a unified toolbar, search, an
 /// inset list of shortcuts, and a Form sheet for add/edit. The app is a regular
@@ -69,7 +69,7 @@ struct MainWindowView: View {
                     }
                 }
             }
-            .navigationTitle("BetterTab")
+            .navigationTitle("Appear")
             .searchable(text: $search, placement: .toolbar, prompt: "Search apps")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {

@@ -1,10 +1,10 @@
-# better-tab Skeleton Implementation Plan
+# appear Skeleton Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A test-driven SwiftPM macOS menu-bar app where pressing one global hotkey (⌃⌥S) jumps to (activates/launches) Safari, built on a fully unit-tested binding core.
 
-**Architecture:** Two SwiftPM targets — a pure-logic library `BetterTabCore` (no AppKit, fully unit-tested) holding the binding model and protocol seams, and a thin executable `BetterTab` (SwiftUI `MenuBarExtra` + Carbon/NSWorkspace adapters) that wires the core to the OS. All OS effects sit behind the `HotKeyRegistering` and `AppActivating` protocols so the core logic is testable headlessly.
+**Architecture:** Two SwiftPM targets — a pure-logic library `AppearCore` (no AppKit, fully unit-tested) holding the binding model and protocol seams, and a thin executable `Appear` (SwiftUI `MenuBarExtra` + Carbon/NSWorkspace adapters) that wires the core to the OS. All OS effects sit behind the `HotKeyRegistering` and `AppActivating` protocols so the core logic is testable headlessly.
 
 **Tech Stack:** Swift 6.1 toolchain, SwiftPM, SwiftUI `MenuBarExtra`, Carbon `RegisterEventHotKey`, `NSWorkspace`/`NSRunningApplication`, Swift Testing (`import Testing`).
 
@@ -17,7 +17,7 @@ These apply to EVERY task:
 - Swift language mode `.v5` on all targets for this increment (Swift 6 strict-concurrency hardening is a deferred follow-up, out of scope).
 - **No third-party dependencies.**
 - The executable entry-point source file must **not** be named `main.swift` (it collides with `@main`). Use `App.swift`.
-- `BetterTabCore` imports only `Foundation` — never `AppKit`/`SwiftUI`.
+- `AppearCore` imports only `Foundation` — never `AppKit`/`SwiftUI`.
 - Apps are matched/stored by **bundle identifier** (e.g. `com.apple.Safari`), never localized name.
 - Run all tests with `swift test` (headless).
 
@@ -29,10 +29,10 @@ Establishes the package, the core library target, the test target, and the pure 
 
 **Files:**
 - Create: `Package.swift`
-- Create: `Sources/BetterTabCore/ModifierKey.swift`
-- Create: `Sources/BetterTabCore/Key.swift`
-- Create: `Sources/BetterTabCore/KeyCombo.swift`
-- Test: `Tests/BetterTabCoreTests/KeyComboTests.swift`
+- Create: `Sources/AppearCore/ModifierKey.swift`
+- Create: `Sources/AppearCore/Key.swift`
+- Create: `Sources/AppearCore/KeyCombo.swift`
+- Test: `Tests/AppearCoreTests/KeyComboTests.swift`
 
 **Interfaces:**
 - Consumes: nothing (first task).
@@ -50,23 +50,23 @@ import PackageDescription
 let swift5 = SwiftSetting.swiftLanguageMode(.v5)
 
 let package = Package(
-    name: "BetterTab",
+    name: "Appear",
     platforms: [
         .macOS(.v14)
     ],
     targets: [
         .target(
-            name: "BetterTabCore",
+            name: "AppearCore",
             swiftSettings: [swift5]
         ),
         .executableTarget(
-            name: "BetterTab",
-            dependencies: ["BetterTabCore"],
+            name: "Appear",
+            dependencies: ["AppearCore"],
             swiftSettings: [swift5]
         ),
         .testTarget(
-            name: "BetterTabCoreTests",
-            dependencies: ["BetterTabCore"],
+            name: "AppearCoreTests",
+            dependencies: ["AppearCore"],
             swiftSettings: [swift5]
         ),
     ]
@@ -75,11 +75,11 @@ let package = Package(
 
 - [ ] **Step 2: Write the failing test**
 
-Create `Tests/BetterTabCoreTests/KeyComboTests.swift`:
+Create `Tests/AppearCoreTests/KeyComboTests.swift`:
 
 ```swift
 import Testing
-@testable import BetterTabCore
+@testable import AppearCore
 
 @Test func modifierSymbolsAreInCanonicalOrder() {
     let mods: ModifierKey = [.command, .control, .shift, .option]
@@ -107,7 +107,7 @@ Expected: build FAILS — `cannot find 'ModifierKey' in scope` / `cannot find 'K
 
 - [ ] **Step 4: Implement `ModifierKey`**
 
-Create `Sources/BetterTabCore/ModifierKey.swift`:
+Create `Sources/AppearCore/ModifierKey.swift`:
 
 ```swift
 /// A set of keyboard modifier flags, independent of any OS framework.
@@ -134,7 +134,7 @@ public struct ModifierKey: OptionSet, Hashable, Sendable {
 
 - [ ] **Step 5: Implement `Key`**
 
-Create `Sources/BetterTabCore/Key.swift`:
+Create `Sources/AppearCore/Key.swift`:
 
 ```swift
 /// A keyboard key identified by its macOS ANSI virtual key code.
@@ -153,7 +153,7 @@ public enum Key: UInt32, Sendable, CaseIterable {
 
 - [ ] **Step 6: Implement `KeyCombo`**
 
-Create `Sources/BetterTabCore/KeyCombo.swift`:
+Create `Sources/AppearCore/KeyCombo.swift`:
 
 ```swift
 /// A keyboard shortcut: a key plus its modifier flags.
@@ -179,7 +179,7 @@ Expected: PASS — 4 tests pass, build succeeds.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Package.swift Sources/BetterTabCore Tests/BetterTabCoreTests
+git add Package.swift Sources/AppearCore Tests/AppearCoreTests
 git commit -m "feat: package scaffold + KeyCombo model"
 ```
 
@@ -190,9 +190,9 @@ git commit -m "feat: package scaffold + KeyCombo model"
 Adds the value type tying a shortcut to a target app, and the store that holds bindings with duplicate-combo rejection.
 
 **Files:**
-- Create: `Sources/BetterTabCore/AppBinding.swift`
-- Create: `Sources/BetterTabCore/BindingStore.swift`
-- Test: `Tests/BetterTabCoreTests/BindingStoreTests.swift`
+- Create: `Sources/AppearCore/AppBinding.swift`
+- Create: `Sources/AppearCore/BindingStore.swift`
+- Test: `Tests/AppearCoreTests/BindingStoreTests.swift`
 
 **Interfaces:**
 - Consumes: `KeyCombo` (Task 1).
@@ -203,11 +203,11 @@ Adds the value type tying a shortcut to a target app, and the store that holds b
 
 - [ ] **Step 1: Write the failing test**
 
-Create `Tests/BetterTabCoreTests/BindingStoreTests.swift`:
+Create `Tests/AppearCoreTests/BindingStoreTests.swift`:
 
 ```swift
 import Testing
-@testable import BetterTabCore
+@testable import AppearCore
 
 private let comboS = KeyCombo(key: .s, modifiers: [.control, .option])
 private let safari = AppBinding(combo: comboS, bundleID: "com.apple.Safari")
@@ -247,7 +247,7 @@ Expected: build FAILS — `cannot find 'AppBinding' in scope` / `cannot find 'Bi
 
 - [ ] **Step 3: Implement `AppBinding`**
 
-Create `Sources/BetterTabCore/AppBinding.swift`:
+Create `Sources/AppearCore/AppBinding.swift`:
 
 ```swift
 /// Binds a keyboard shortcut to a target application (by bundle identifier).
@@ -264,7 +264,7 @@ public struct AppBinding: Hashable, Sendable {
 
 - [ ] **Step 4: Implement `BindingStore`**
 
-Create `Sources/BetterTabCore/BindingStore.swift`:
+Create `Sources/AppearCore/BindingStore.swift`:
 
 ```swift
 /// Errors raised while mutating a `BindingStore`.
@@ -307,7 +307,7 @@ Expected: PASS — 4 tests pass.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add Sources/BetterTabCore/AppBinding.swift Sources/BetterTabCore/BindingStore.swift Tests/BetterTabCoreTests/BindingStoreTests.swift
+git add Sources/AppearCore/AppBinding.swift Sources/AppearCore/BindingStore.swift Tests/AppearCoreTests/BindingStoreTests.swift
 git commit -m "feat: AppBinding + BindingStore with duplicate detection"
 ```
 
@@ -318,10 +318,10 @@ git commit -m "feat: AppBinding + BindingStore with duplicate detection"
 Adds the two OS-seam protocols and the coordinator that wires "combo fired → resolve binding → activate (or launch) target." This is the heart of the testable logic, verified with a spy registrar and a fake activator.
 
 **Files:**
-- Create: `Sources/BetterTabCore/HotKeyRegistering.swift`
-- Create: `Sources/BetterTabCore/AppActivating.swift`
-- Create: `Sources/BetterTabCore/HotKeyCoordinator.swift`
-- Test: `Tests/BetterTabCoreTests/HotKeyCoordinatorTests.swift`
+- Create: `Sources/AppearCore/HotKeyRegistering.swift`
+- Create: `Sources/AppearCore/AppActivating.swift`
+- Create: `Sources/AppearCore/HotKeyCoordinator.swift`
+- Test: `Tests/AppearCoreTests/HotKeyCoordinatorTests.swift`
 
 **Interfaces:**
 - Consumes: `KeyCombo`, `AppBinding`, `BindingStore` (Tasks 1–2).
@@ -333,12 +333,12 @@ Adds the two OS-seam protocols and the coordinator that wires "combo fired → r
 
 - [ ] **Step 1: Write the failing test**
 
-Create `Tests/BetterTabCoreTests/HotKeyCoordinatorTests.swift`:
+Create `Tests/AppearCoreTests/HotKeyCoordinatorTests.swift`:
 
 ```swift
 import Foundation
 import Testing
-@testable import BetterTabCore
+@testable import AppearCore
 
 // MARK: - Test doubles
 
@@ -443,7 +443,7 @@ Expected: build FAILS — `cannot find type 'HotKeyRegistering'` / `'AppActivati
 
 - [ ] **Step 3: Implement `HotKeyRegistering`**
 
-Create `Sources/BetterTabCore/HotKeyRegistering.swift`:
+Create `Sources/AppearCore/HotKeyRegistering.swift`:
 
 ```swift
 /// OS seam for registering global hotkeys. Implemented in the executable by a
@@ -458,7 +458,7 @@ public protocol HotKeyRegistering: AnyObject {
 
 - [ ] **Step 4: Implement `AppActivating`**
 
-Create `Sources/BetterTabCore/AppActivating.swift`:
+Create `Sources/AppearCore/AppActivating.swift`:
 
 ```swift
 import Foundation
@@ -477,7 +477,7 @@ public protocol AppActivating {
 
 - [ ] **Step 5: Implement `HotKeyCoordinator`**
 
-Create `Sources/BetterTabCore/HotKeyCoordinator.swift`:
+Create `Sources/AppearCore/HotKeyCoordinator.swift`:
 
 ```swift
 import Foundation
@@ -528,7 +528,7 @@ Expected: PASS — all tests across the three suites pass (12 total).
 - [ ] **Step 7: Commit**
 
 ```bash
-git add Sources/BetterTabCore/HotKeyRegistering.swift Sources/BetterTabCore/AppActivating.swift Sources/BetterTabCore/HotKeyCoordinator.swift Tests/BetterTabCoreTests/HotKeyCoordinatorTests.swift
+git add Sources/AppearCore/HotKeyRegistering.swift Sources/AppearCore/AppActivating.swift Sources/AppearCore/HotKeyCoordinator.swift Tests/AppearCoreTests/HotKeyCoordinatorTests.swift
 git commit -m "feat: OS-seam protocols + HotKeyCoordinator with tested activation logic"
 ```
 
@@ -539,23 +539,23 @@ git commit -m "feat: OS-seam protocols + HotKeyCoordinator with tested activatio
 Implements the thin glue: the real Carbon hotkey registrar, the real NSWorkspace activator, an app controller wiring the one live binding (⌃⌥S → Safari), and the SwiftUI `MenuBarExtra` entry point. This is integration glue (not unit-tested per the spec); the deliverable is a clean `swift build` plus a documented manual smoke check.
 
 **Files:**
-- Create: `Sources/BetterTab/CarbonHotKeyRegistrar.swift`
-- Create: `Sources/BetterTab/WorkspaceAppActivator.swift`
-- Create: `Sources/BetterTab/AppController.swift`
-- Create: `Sources/BetterTab/App.swift`
+- Create: `Sources/Appear/CarbonHotKeyRegistrar.swift`
+- Create: `Sources/Appear/WorkspaceAppActivator.swift`
+- Create: `Sources/Appear/AppController.swift`
+- Create: `Sources/Appear/App.swift`
 
 **Interfaces:**
 - Consumes: `HotKeyRegistering`, `AppActivating`, `BindingStore`, `HotKeyCoordinator`, `KeyCombo`, `AppBinding`, `Key`, `ModifierKey` (Tasks 1–3).
-- Produces: the runnable `BetterTab` executable. No symbols consumed by later tasks.
+- Produces: the runnable `Appear` executable. No symbols consumed by later tasks.
 
 - [ ] **Step 1: Implement the Carbon hotkey registrar**
 
-Create `Sources/BetterTab/CarbonHotKeyRegistrar.swift`:
+Create `Sources/Appear/CarbonHotKeyRegistrar.swift`:
 
 ```swift
 import AppKit
 import Carbon.HIToolbox
-import BetterTabCore
+import AppearCore
 
 /// Errors from the Carbon hotkey backend.
 enum HotKeyRegistrarError: Error {
@@ -640,11 +640,11 @@ final class CarbonHotKeyRegistrar: HotKeyRegistering {
 
 - [ ] **Step 2: Implement the NSWorkspace activator**
 
-Create `Sources/BetterTab/WorkspaceAppActivator.swift`:
+Create `Sources/Appear/WorkspaceAppActivator.swift`:
 
 ```swift
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// Real `AppActivating` backed by `NSWorkspace` / `NSRunningApplication`.
 struct WorkspaceAppActivator: AppActivating {
@@ -671,11 +671,11 @@ struct WorkspaceAppActivator: AppActivating {
 
 - [ ] **Step 3: Implement the app controller**
 
-Create `Sources/BetterTab/AppController.swift`:
+Create `Sources/Appear/AppController.swift`:
 
 ```swift
 import Foundation
-import BetterTabCore
+import AppearCore
 
 /// Owns the core objects and installs the single live binding (⌃⌥S → Safari).
 final class AppController {
@@ -703,15 +703,15 @@ final class AppController {
 
 - [ ] **Step 4: Implement the SwiftUI entry point**
 
-Create `Sources/BetterTab/App.swift`:
+Create `Sources/Appear/App.swift`:
 
 ```swift
 import SwiftUI
 import AppKit
-import BetterTabCore
+import AppearCore
 
 @main
-struct BetterTabApp: App {
+struct AppearApp: App {
     private let controller = AppController()
 
     init() {
@@ -721,10 +721,10 @@ struct BetterTabApp: App {
     }
 
     var body: some Scene {
-        MenuBarExtra("BetterTab", systemImage: "command") {
+        MenuBarExtra("Appear", systemImage: "command") {
             Text(controller.statusText)
             Divider()
-            Button("Quit BetterTab") { NSApp.terminate(nil) }
+            Button("Quit Appear") { NSApp.terminate(nil) }
                 .keyboardShortcut("q")
         }
     }
@@ -734,7 +734,7 @@ struct BetterTabApp: App {
 - [ ] **Step 5: Build the executable**
 
 Run: `swift build`
-Expected: build SUCCEEDS with no errors (`Compiling BetterTabCore`, `Compiling BetterTab`, `Build complete!`).
+Expected: build SUCCEEDS with no errors (`Compiling AppearCore`, `Compiling Appear`, `Build complete!`).
 
 - [ ] **Step 6: Run the full test suite (confirm nothing regressed)**
 
@@ -743,15 +743,15 @@ Expected: PASS — all 12 core tests still pass (the executable target adds no t
 
 - [ ] **Step 7: Manual smoke check**
 
-Run: `swift run BetterTab`
-Expected: a `command` (⌘) icon appears in the menu bar (no Dock icon). With at least one other app focused, press **⌃⌥S** — Safari comes to the front (launching if it wasn't running). Open the menu-bar icon to see "⌃⌥S → Safari" and a "Quit BetterTab" item. Stop with Ctrl-C in the terminal or the Quit menu item.
+Run: `swift run Appear`
+Expected: a `command` (⌘) icon appears in the menu bar (no Dock icon). With at least one other app focused, press **⌃⌥S** — Safari comes to the front (launching if it wasn't running). Open the menu-bar icon to see "⌃⌥S → Safari" and a "Quit Appear" item. Stop with Ctrl-C in the terminal or the Quit menu item.
 
 Note: this step is a manual verification of OS-level glue and is not automated; record the observed result.
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add Sources/BetterTab
+git add Sources/Appear
 git commit -m "feat: Carbon + NSWorkspace adapters and MenuBarExtra app wiring ⌃⌥S → Safari"
 ```
 

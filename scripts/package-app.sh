@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Package the BetterTab SwiftPM executable into a runnable, ad-hoc-signed .app
+# Package the Appear SwiftPM executable into a runnable, ad-hoc-signed .app
 # bundle. SwiftPM only produces a bare binary, so we assemble the bundle by hand:
 # a Contents/MacOS executable + an Info.plist (with LSUIElement so it runs as a
 # menu-bar agent with no Dock icon) + an ad-hoc code signature so macOS will
 # launch it without Gatekeeper blocking.
 #
 # Usage:
-#   scripts/package-app.sh            # release build -> dist/BetterTab.app
+#   scripts/package-app.sh            # release build -> dist/Appear.app
 #   CONFIG=debug scripts/package-app.sh
 #
 # Override metadata via env vars: BUNDLE_ID, VERSION, BUILD, MIN_MACOS.
@@ -15,8 +15,8 @@
 set -euo pipefail
 
 # --- configuration ---------------------------------------------------------
-APP_NAME="BetterTab"
-BUNDLE_ID="${BUNDLE_ID:-io.dodobrands.bettertab}"
+APP_NAME="Appear"
+BUNDLE_ID="${BUNDLE_ID:-io.dodobrands.appear}"
 VERSION="${VERSION:-1.0}"
 BUILD="${BUILD:-1}"
 MIN_MACOS="${MIN_MACOS:-15.0}"

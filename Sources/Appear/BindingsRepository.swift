@@ -1,5 +1,5 @@
 import Foundation
-import BetterTabCore
+import AppearCore
 
 /// Persists the user's bindings across launches via `UserDefaults` (JSON-encoded).
 struct BindingsRepository {

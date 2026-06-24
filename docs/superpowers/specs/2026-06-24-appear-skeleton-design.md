@@ -1,11 +1,11 @@
-# better-tab — Skeleton + Shortcut→App Jump (Design)
+# appear — Skeleton + Shortcut→App Jump (Design)
 
 **Date:** 2026-06-24
 **Status:** Approved
 
 ## Summary
 
-`better-tab` is a macOS menu-bar utility that lets a user bind a global keyboard
+`appear` is a macOS menu-bar utility that lets a user bind a global keyboard
 shortcut to an application; pressing the shortcut jumps to (activates) that app,
 launching it first if it isn't already running.
 
@@ -62,11 +62,11 @@ deep research:
 
 A two-target SwiftPM package separating pure logic from OS side effects:
 
-- **`BetterTabCore`** (library, no AppKit) — all testable logic and protocol seams.
-- **`BetterTab`** (executable) — thin SwiftUI `MenuBarExtra` app plus the two real
+- **`AppearCore`** (library, no AppKit) — all testable logic and protocol seams.
+- **`Appear`** (executable) — thin SwiftUI `MenuBarExtra` app plus the two real
   OS adapters. Not unit-tested; it is glue wiring the core to the OS.
 
-### Core components (`BetterTabCore`, unit-tested)
+### Core components (`AppearCore`, unit-tested)
 
 - **`KeyCombo`** — value type: `keyCode: UInt32` + Carbon `modifiers: UInt32`, plus
   a human-readable description. Value semantics make it trivially testable.
@@ -83,7 +83,7 @@ A two-target SwiftPM package separating pure logic from OS side effects:
   (no launch); installed but not running → launch with `activates: true`; not
   installed → throw.
 
-### Executable components (`BetterTab`, thin glue, not unit-tested)
+### Executable components (`Appear`, thin glue, not unit-tested)
 
 - **`CarbonHotKeyRegistrar: HotKeyRegistering`** — wraps `RegisterEventHotKey` /
   `InstallEventHandler`.
@@ -114,7 +114,7 @@ Typed errors surfaced from the core and propagated by the adapters:
 
 ## Testing Plan (TDD, Swift Testing, headless)
 
-In `BetterTabCoreTests`, written test-first (red → green):
+In `AppearCoreTests`, written test-first (red → green):
 
 - **`KeyCombo`** — equality / value semantics / human-readable description.
 - **`BindingStore`** — add then resolve a combo to its bundle ID; remove; adding a
@@ -130,22 +130,22 @@ In `BetterTabCoreTests`, written test-first (red → green):
 ## Directory Layout
 
 ```
-better-tab/
+appear/
 ├── Package.swift                         # swift-tools-version:6.0, .macOS(.v14)
 ├── Sources/
-│   ├── BetterTabCore/                    # pure logic, no AppKit
+│   ├── AppearCore/                    # pure logic, no AppKit
 │   │   ├── KeyCombo.swift
 │   │   ├── AppBinding.swift
 │   │   ├── BindingStore.swift
 │   │   ├── HotKeyRegistering.swift
 │   │   ├── AppActivating.swift
 │   │   └── HotKeyCoordinator.swift
-│   └── BetterTab/                        # thin executable (App.swift, NOT main.swift)
+│   └── Appear/                        # thin executable (App.swift, NOT main.swift)
 │       ├── App.swift
 │       ├── CarbonHotKeyRegistrar.swift
 │       └── WorkspaceAppActivator.swift
 └── Tests/
-    └── BetterTabCoreTests/
+    └── AppearCoreTests/
         ├── KeyComboTests.swift
         ├── BindingStoreTests.swift
         └── HotKeyCoordinatorTests.swift

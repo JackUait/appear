@@ -1,5 +1,5 @@
 import SwiftUI
-import BetterTabCore
+import AppearCore
 
 /// Compact inline editor used inside the popover, so shortcuts can be edited
 /// without leaving the menu-bar view. Native controls throughout.

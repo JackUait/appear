@@ -1,6 +1,6 @@
 import Foundation
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// Identifiable wrapper so a binding can drive `List`/`Table` selection.
 /// Combos are unique, so the combo description is a stable id.

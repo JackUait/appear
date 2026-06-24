@@ -1,5 +1,5 @@
 import SwiftUI
-import BetterTabCore
+import AppearCore
 
 /// A single key-cap chip in the macOS Keyboard-settings idiom — subtly raised,
 /// fully adaptive.

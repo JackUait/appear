@@ -1,7 +1,7 @@
 import AppKit
 import CoreGraphics
 import ApplicationServices
-import BetterTabCore
+import AppearCore
 
 /// Detects multi-key chords (e.g. `G+L+M+N+R` held together) that Carbon's
 /// single-key `RegisterEventHotKey` can't express.

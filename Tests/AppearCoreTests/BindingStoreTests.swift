@@ -1,5 +1,5 @@
 import Testing
-@testable import BetterTabCore
+@testable import AppearCore
 
 private let comboS = KeyCombo(key: .s, modifiers: [.control, .option])
 private let safari = AppBinding(combo: comboS, bundleID: "com.apple.Safari")

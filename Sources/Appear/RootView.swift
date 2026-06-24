@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import BetterTabCore
+import AppearCore
 
 /// The menu-bar popover: a vibrant, modern macOS surface. Tap a row to jump,
 /// hover to edit/delete, or add — editable inline without leaving the popover.
@@ -129,8 +129,8 @@ struct RootView: View {
                 .shadow(color: Color.accentColor.opacity(0.35), radius: 4, y: 2)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text("BetterTab").font(.headline)
-                Text("Jump to your apps")
+                Text("Appear").font(.headline)
+                Text("Make any app appear")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -138,7 +138,7 @@ struct RootView: View {
             Menu {
                 Button("Open Window") { openEditor() }
                 Divider()
-                Button("Quit BetterTab") { NSApp.terminate(nil) }
+                Button("Quit Appear") { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -161,7 +161,7 @@ struct RootView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Multi-key chords need Accessibility")
                     .font(.system(size: 12, weight: .semibold))
-                Text("Grant BetterTab access, then your chords work everywhere.")
+                Text("Grant Appear access, then your chords work everywhere.")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
