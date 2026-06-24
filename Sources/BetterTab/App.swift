@@ -15,7 +15,7 @@ struct BetterTabApp: App {
             RootView()
                 .environmentObject(model)
         } label: {
-            Image(systemName: "arrow.up.right.square")
+            Image(systemName: "command")
         }
         .menuBarExtraStyle(.window)
     }

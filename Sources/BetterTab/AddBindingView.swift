@@ -1,236 +1,184 @@
 import SwiftUI
+import AppKit
 import BetterTabCore
 
-/// Inline composer for a new binding: choose modifiers + a key from a mini
-/// QWERTY keyboard, choose a target app, then bind.
+/// Inline composer styled like a System Settings form: modifier pills, a key
+/// popup, an application popup, a live preview, and native action buttons.
 struct AddBindingView: View {
     @EnvironmentObject var model: BindingsModel
     let onDone: () -> Void
 
-    @State private var modifiers: ModifierKey = [.control, .option]
+    @State private var modifiers: ModifierKey = [.command, .option]
     @State private var selectedKey: Key?
     @State private var selectedBundleID: String?
-    @State private var pickingApp = false
-    @State private var appSearch = ""
 
-    private let qwerty = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]
     private let modifierOptions: [(ModifierKey, String)] = [
         (.control, "⌃"), (.option, "⌥"), (.shift, "⇧"), (.command, "⌘"),
     ]
 
-    private var isValid: Bool {
-        !modifiers.isEmpty && selectedKey != nil && selectedBundleID != nil
+    private var composed: KeyCombo? {
+        guard let key = selectedKey, !modifiers.isEmpty else { return nil }
+        return KeyCombo(key: key, modifiers: modifiers)
     }
 
-    private var filteredApps: [InstalledApp] {
-        guard !appSearch.isEmpty else { return model.installedApps }
-        return model.installedApps.filter {
-            $0.name.localizedCaseInsensitiveContains(appSearch)
-        }
-    }
+    private var isValid: Bool { composed != nil && selectedBundleID != nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionLabel("WHEN I PRESS")
-            modifierRow
-            keyboard
+        VStack(alignment: .leading, spacing: 13) {
+            Text("New Shortcut")
+                .font(.system(size: 13, weight: .semibold))
 
-            sectionLabel("JUMP TO")
-            appSelector
+            VStack(spacing: 9) {
+                field("Modifiers") { modifierPills }
+                field("Key") { keyMenu }
+                field("Application") { appMenu }
+            }
+
+            preview
 
             if let error = model.errorMessage {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
                     .font(.system(size: 11))
-                    .foregroundStyle(Theme.danger)
+                    .foregroundStyle(.orange)
+                    .symbolRenderingMode(.multicolor)
             }
 
             HStack(spacing: 8) {
                 Spacer()
                 Button("Cancel", action: onDone)
-                    .buttonStyle(SecondaryButtonStyle())
-                Button("Bind shortcut", action: bind)
-                    .buttonStyle(PrimaryButtonStyle(enabled: isValid))
+                    .controlSize(.regular)
+                Button("Add Shortcut", action: bind)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.regular)
                     .disabled(!isValid)
             }
-            .padding(.top, 2)
+            .padding(.top, 1)
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Theme.bgRaised)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Theme.stroke, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
                 )
         )
-        .padding(.horizontal, 12)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 12)
     }
 
-    // MARK: Pieces
+    // MARK: Rows
 
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 9, weight: .heavy, design: .monospaced))
-            .tracking(1.6)
-            .foregroundStyle(Theme.textFaint)
+    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 10) {
+            Text(label)
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .frame(width: 78, alignment: .trailing)
+            content()
+            Spacer(minLength: 0)
+        }
     }
 
-    private var modifierRow: some View {
+    private var modifierPills: some View {
         HStack(spacing: 6) {
             ForEach(modifierOptions, id: \.1) { option, glyph in
                 Button {
-                    toggle(option)
+                    if modifiers.contains(option) { modifiers.remove(option) }
+                    else { modifiers.insert(option) }
                 } label: {
-                    Keycap(label: glyph, lit: modifiers.contains(option), size: 30)
+                    Text(glyph)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(modifiers.contains(option) ? AnyShapeStyle(.white) : AnyShapeStyle(.secondary))
+                        .frame(width: 30, height: 26)
+                        .background(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .fill(modifiers.contains(option) ? Color.accentColor : Color.primary.opacity(0.06))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(modifiers.contains(option) ? Color.clear : Color.primary.opacity(0.08), lineWidth: 1)
+                        )
                 }
                 .buttonStyle(.plain)
             }
-            Spacer()
         }
     }
 
-    private var keyboard: some View {
-        VStack(spacing: 5) {
-            ForEach(Array(qwerty.enumerated()), id: \.offset) { index, row in
-                HStack(spacing: 5) {
-                    if index > 0 { Spacer(minLength: 0).frame(width: CGFloat(index) * 11) }
-                    ForEach(Array(row), id: \.self) { letter in
-                        Button {
-                            selectedKey = key(for: letter)
-                        } label: {
-                            Keycap(
-                                label: String(letter),
-                                lit: selectedKey == key(for: letter),
-                                size: 26
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    Spacer(minLength: 0)
-                }
+    private var keyMenu: some View {
+        Menu {
+            ForEach(Key.allCases, id: \.self) { key in
+                Button(key.label) { selectedKey = key }
             }
-        }
-    }
-
-    private var appSelector: some View {
-        VStack(spacing: 0) {
-            Button {
-                withAnimation(.easeOut(duration: 0.16)) { pickingApp.toggle() }
-            } label: {
-                HStack(spacing: 10) {
-                    if let id = selectedBundleID {
-                        AppIcon(bundleID: id, size: 24)
-                        Text(AppCatalog.name(forBundleID: id))
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Theme.textPrimary)
-                    } else {
-                        Image(systemName: "square.grid.2x2")
-                            .foregroundStyle(Theme.textFaint)
-                            .frame(width: 24, height: 24)
-                        Text("Choose an app…")
-                            .font(.system(size: 13))
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-                    Spacer()
-                    Image(systemName: pickingApp ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Theme.textFaint)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(Theme.surface)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .strokeBorder(Theme.stroke, lineWidth: 1)
-                        )
-                )
-            }
-            .buttonStyle(.plain)
-
-            if pickingApp {
-                VStack(spacing: 6) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Theme.textFaint)
-                        TextField("Search apps", text: $appSearch)
-                            .textFieldStyle(.plain)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.textPrimary)
-                    }
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 7).fill(Theme.bg)
-                            .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Theme.stroke, lineWidth: 1))
-                    )
-
-                    ScrollView {
-                        LazyVStack(spacing: 1) {
-                            ForEach(filteredApps) { app in
-                                appRow(app)
-                            }
-                        }
-                    }
-                    .frame(maxHeight: 168)
-                }
-                .padding(8)
-                .background(
-                    RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.bg)
-                        .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Theme.stroke, lineWidth: 1))
-                )
-                .padding(.top, 6)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-    }
-
-    private func appRow(_ app: InstalledApp) -> some View {
-        Button {
-            selectedBundleID = app.bundleID
-            withAnimation(.easeOut(duration: 0.16)) { pickingApp = false }
-            appSearch = ""
         } label: {
-            HStack(spacing: 9) {
-                AppIcon(bundleID: app.bundleID, size: 22)
-                Text(app.name)
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.textPrimary)
-                Spacer()
-                if selectedBundleID == app.bundleID {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Theme.accent)
+            Text(selectedKey?.label ?? "Choose…")
+                .frame(minWidth: 40)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.primary.opacity(0.06))
+        )
+    }
+
+    private var appMenu: some View {
+        Menu {
+            ForEach(model.installedApps) { app in
+                Button {
+                    selectedBundleID = app.bundleID
+                } label: {
+                    Text(app.name)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(selectedBundleID == app.bundleID ? Theme.accentSoft : .clear)
-            )
+        } label: {
+            HStack(spacing: 7) {
+                if let id = selectedBundleID {
+                    AppIcon(bundleID: id, size: 16)
+                    Text(AppCatalog.name(forBundleID: id))
+                } else {
+                    Text("Choose…").foregroundStyle(.secondary)
+                }
+            }
         }
-        .buttonStyle(HoverHighlightStyle())
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .padding(.horizontal, 9)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color.primary.opacity(0.06))
+        )
     }
 
-    // MARK: Actions
-
-    private func toggle(_ modifier: ModifierKey) {
-        if modifiers.contains(modifier) { modifiers.remove(modifier) }
-        else { modifiers.insert(modifier) }
-    }
-
-    private func key(for letter: Character) -> Key? {
-        Key.allCases.first { $0.label == String(letter) }
+    @ViewBuilder private var preview: some View {
+        if let combo = composed {
+            HStack(spacing: 9) {
+                ShortcutView(combo: combo, style: .accent)
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                if let id = selectedBundleID {
+                    AppIcon(bundleID: id, size: 18)
+                    Text(AppCatalog.name(forBundleID: id))
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Choose an app")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .padding(.vertical, 2)
+            .transition(.opacity)
+        }
     }
 
     private func bind() {
-        guard let key = selectedKey, let bundleID = selectedBundleID else { return }
-        model.add(combo: KeyCombo(key: key, modifiers: modifiers), bundleID: bundleID)
+        guard let combo = composed, let bundleID = selectedBundleID else { return }
+        model.add(combo: combo, bundleID: bundleID)
         if model.errorMessage == nil { onDone() }
     }
 }

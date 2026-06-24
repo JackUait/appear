@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// The macOS icon for an app, resolved by bundle identifier, in a squircle.
+/// The macOS icon for an app, resolved by bundle identifier.
 struct AppIcon: View {
     let bundleID: String
-    var size: CGFloat = 30
+    var size: CGFloat = 28
 
     var body: some View {
         Group {
@@ -12,19 +12,14 @@ struct AppIcon: View {
                     .resizable()
                     .interpolation(.high)
             } else {
-                RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
-                    .fill(Theme.surface)
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                    .fill(Color.primary.opacity(0.06))
                     .overlay(
                         Image(systemName: "app.dashed")
-                            .foregroundStyle(Theme.textFaint)
+                            .foregroundStyle(.tertiary)
                     )
             }
         }
         .frame(width: size, height: size)
-        .clipShape(RoundedRectangle(cornerRadius: size * 0.23, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: size * 0.23, style: .continuous)
-                .strokeBorder(Theme.stroke, lineWidth: 1)
-        )
     }
 }
