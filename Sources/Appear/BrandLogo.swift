@@ -23,6 +23,8 @@ struct BrandLogo: View {
         if let logo = Brand.logo {
             Image(nsImage: logo)
                 .resizable()
+                .interpolation(.high)
+                .antialiased(true)
                 .aspectRatio(contentMode: .fit)
                 .frame(height: height)
         } else {
