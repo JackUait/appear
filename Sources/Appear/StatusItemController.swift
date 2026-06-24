@@ -22,7 +22,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         super.init()
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "command", accessibilityDescription: "Appear")
+            button.image = Self.menuBarIcon()
             button.imagePosition = .imageOnly
             button.target = self
             button.action = #selector(togglePopover)
@@ -38,6 +38,24 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             rootView: RootView(closePopover: { [weak self] in self?.closePopover() })
                 .environmentObject(model)
         )
+    }
+
+    /// The menu-bar icon: the brand logo scaled to the menu-bar height (kept in
+    /// color, not a template), or the command glyph if the asset is missing.
+    private static func menuBarIcon() -> NSImage? {
+        guard let logo = Brand.logo else {
+            return NSImage(systemSymbolName: "command", accessibilityDescription: "Appear")
+        }
+        let height: CGFloat = 18
+        let width = height * (logo.size.width / max(logo.size.height, 1))
+        let icon = NSImage(size: NSSize(width: width, height: height))
+        icon.lockFocus()
+        logo.draw(in: NSRect(origin: .zero, size: icon.size),
+                  from: .zero, operation: .sourceOver, fraction: 1.0)
+        icon.unlockFocus()
+        icon.isTemplate = false
+        icon.accessibilityDescription = "Appear"
+        return icon
     }
 
     @objc private func togglePopover() {

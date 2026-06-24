@@ -48,6 +48,17 @@ rm -rf "$APP_BUNDLE"
 mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
 cp "$BINARY" "$CONTENTS/MacOS/$APP_NAME"
 
+# App icon (Dock/Finder/⌘-Tab). Regenerate from the source logo if missing.
+ICNS="$REPO_ROOT/Assets/$APP_NAME.icns"
+if [[ ! -f "$ICNS" ]]; then
+  echo "==> Generating app icon..."
+  bash "$SCRIPT_DIR/make-icon.sh"
+fi
+cp "$ICNS" "$CONTENTS/Resources/$APP_NAME.icns"
+
+# In-app logo, loaded at runtime via Bundle.main from Contents/Resources.
+cp "$REPO_ROOT/Assets/AppearLogo.png" "$CONTENTS/Resources/AppearLogo.png"
+
 cat > "$CONTENTS/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -56,6 +67,7 @@ cat > "$CONTENTS/Info.plist" <<PLIST
     <key>CFBundleExecutable</key>      <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>      <string>$BUNDLE_ID</string>
     <key>CFBundleName</key>            <string>$APP_NAME</string>
+    <key>CFBundleIconFile</key>        <string>$APP_NAME</string>
     <key>CFBundlePackageType</key>     <string>APPL</string>
     <key>CFBundleShortVersionString</key> <string>$VERSION</string>
     <key>CFBundleVersion</key>         <string>$BUILD</string>

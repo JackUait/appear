@@ -127,16 +127,8 @@ struct RootView: View {
 
     private var header: some View {
         HStack(spacing: 11) {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(LinearGradient(colors: [Color.accentColor, Color.accentColor.opacity(0.78)],
-                                     startPoint: .top, endPoint: .bottom))
-                .frame(width: 30, height: 30)
-                .overlay(
-                    Image(systemName: "command")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
-                )
-                .shadow(color: Color.accentColor.opacity(0.35), radius: 4, y: 2)
+            BrandLogo(height: 34)
+                .shadow(color: Color.accentColor.opacity(0.28), radius: 4, y: 2)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Appear").font(.headline)
@@ -189,9 +181,9 @@ struct RootView: View {
 
     private var empty: some View {
         VStack(spacing: 7) {
-            Image(systemName: "command")
-                .font(.system(size: 24, weight: .light))
-                .foregroundStyle(.tertiary)
+            BrandLogo(height: 46)
+                .opacity(0.9)
+                .padding(.bottom, 2)
             Text("No shortcuts yet")
                 .font(.callout.weight(.medium))
             Text("Add one to jump to an app with a keystroke.")
