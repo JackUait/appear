@@ -9,9 +9,11 @@ public struct KeyCombo: Hashable, Sendable, Codable {
     }
 
     /// Builds a combo from a hardware virtual key code (e.g. an `NSEvent`'s
-    /// `keyCode`) and modifier flags, or nil if the code isn't a supported `Key`.
+    /// `keyCode`) and modifier flags, or nil if the code is a bare modifier key
+    /// (which can't stand alone as a shortcut's key).
     public init?(virtualKeyCode: UInt32, modifiers: ModifierKey) {
-        guard let key = Key(rawValue: virtualKeyCode) else { return nil }
+        let key = Key(virtualKeyCode: virtualKeyCode)
+        guard !key.isModifierKey else { return nil }
         self.init(key: key, modifiers: modifiers)
     }
 

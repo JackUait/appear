@@ -52,7 +52,7 @@ final class CarbonHotKeyRegistrar: HotKeyRegistering {
         let hotKeyID = EventHotKeyID(signature: OSType(0x42544142 /* "BTAB" */), id: id)
         var ref: EventHotKeyRef?
         let status = RegisterEventHotKey(
-            combo.key.rawValue,
+            combo.key.virtualKeyCode,
             carbonMask(for: combo.modifiers),
             hotKeyID,
             GetApplicationEventTarget(),
