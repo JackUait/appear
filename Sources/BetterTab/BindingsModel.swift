@@ -47,6 +47,19 @@ final class BindingsModel: ObservableObject {
                    bundleID: "com.apple.finder"),
     ]
 
+    /// Temporarily tears down the live global hotkeys while the user records a
+    /// new shortcut. Otherwise Carbon intercepts any keystroke that matches an
+    /// already-registered combo system-wide, so the recorder never sees that
+    /// keyDown and the combo can't be captured (it just fires the old hotkey).
+    func suspendHotkeys() {
+        registrar.unregisterAll()
+    }
+
+    /// Restores the global hotkeys after recording finishes.
+    func resumeHotkeys() {
+        try? coordinator.reload(bindings)
+    }
+
     func add(combo: KeyCombo, bundleID: String) {
         guard !bindings.contains(where: { $0.combo == combo }) else {
             errorMessage = "\(combo.description) is already bound."

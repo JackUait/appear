@@ -9,6 +9,11 @@ import BetterTabCore
 struct ShortcutRecorder: View {
     @Binding var combo: KeyCombo?
 
+    /// Called when recording starts (`true`) and stops (`false`), so the host
+    /// can suspend its global hotkeys while capturing — otherwise an existing
+    /// hotkey swallows the keystroke before it reaches us.
+    var onRecordingChange: (Bool) -> Void = { _ in }
+
     @State private var recording = false
     @State private var liveModifiers: ModifierKey = []
     @State private var monitor: Any?
@@ -80,8 +85,10 @@ struct ShortcutRecorder: View {
     }
 
     private func startRecording() {
+        guard !recording else { return }
         liveModifiers = []
         recording = true
+        onRecordingChange(true)
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { event in
             handle(event)
         }
@@ -90,8 +97,11 @@ struct ShortcutRecorder: View {
     private func stopRecording() {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
-        recording = false
         liveModifiers = []
+        if recording {
+            recording = false
+            onRecordingChange(false)
+        }
     }
 
     /// Returns nil to swallow the event (no beep, no typed character) whenever

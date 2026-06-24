@@ -56,7 +56,8 @@ struct RootView: View {
                                     },
                                     onCancel: close,
                                     onDelete: { model.remove(item.binding); close() },
-                                    onPickerExpandedChange: { pickerExpanded = $0 }
+                                    onPickerExpandedChange: { pickerExpanded = $0 },
+                                    onRecordingChange: { $0 ? model.suspendHotkeys() : model.resumeHotkeys() }
                                 )
                                 .padding(.vertical, 2)
                                 .transition(.opacity)
@@ -81,7 +82,8 @@ struct RootView: View {
                                     if model.errorMessage == nil { close() }
                                 },
                                 onCancel: close,
-                                onPickerExpandedChange: { pickerExpanded = $0 }
+                                onPickerExpandedChange: { pickerExpanded = $0 },
+                                onRecordingChange: { $0 ? model.suspendHotkeys() : model.resumeHotkeys() }
                             )
                             .padding(.vertical, 2)
                             .transition(.opacity)

@@ -26,7 +26,8 @@ struct EditorSheet: View {
             Form {
                 Section("Trigger") {
                     LabeledContent("Shortcut") {
-                        ShortcutRecorder(combo: $combo)
+                        ShortcutRecorder(combo: $combo,
+                                         onRecordingChange: { $0 ? model.suspendHotkeys() : model.resumeHotkeys() })
                             .frame(maxWidth: 220)
                     }
                 }
