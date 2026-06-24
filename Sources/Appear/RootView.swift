@@ -23,13 +23,20 @@ struct RootView: View {
     /// NSPopover, so we estimate: compact for the plain list, room for an open
     /// editor, and extra room when its app list expands — capped to stay on
     /// screen.
+    private static let maxListHeight: CGFloat = 460
+
     private var scrollHeight: CGFloat {
         let rows = CGFloat(model.items.count)
-        guard addingNew || editingID != nil else {
-            return min(max(rows * 46 + 12, 60), 460)
+        if addingNew || editingID != nil {
+            let editor: CGFloat = pickerExpanded ? 480 : 190
+            return min(rows * 46 + editor, 600)
         }
-        let editor: CGFloat = pickerExpanded ? 480 : 190
-        return min(rows * 46 + editor, 600)
+        // With no shortcuts, fill the full available height so the empty state
+        // reads as a finished window rather than a small box.
+        if model.bindings.isEmpty {
+            return Self.maxListHeight
+        }
+        return min(max(rows * 46 + 12, 60), Self.maxListHeight)
     }
 
     var body: some View {
@@ -47,6 +54,9 @@ struct RootView: View {
                     VStack(spacing: 3) {
                         if model.bindings.isEmpty && !addingNew {
                             empty
+                                .frame(maxWidth: .infinity,
+                                       minHeight: Self.maxListHeight - 16,
+                                       alignment: .center)
                         }
 
                         ForEach(model.items) { item in
