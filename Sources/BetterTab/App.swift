@@ -6,7 +6,8 @@ struct BetterTabApp: App {
     @StateObject private var model = BindingsModel()
 
     init() {
-        // Menu-bar agent: no Dock icon, no main window.
+        // Start as a menu-bar agent (no Dock icon). The standalone window
+        // promotes the app to a regular app while it's open.
         NSApplication.shared.setActivationPolicy(.accessory)
     }
 
@@ -18,5 +19,12 @@ struct BetterTabApp: App {
             Image(systemName: "command")
         }
         .menuBarExtraStyle(.window)
+
+        Window("BetterTab", id: "main") {
+            MainWindowView()
+                .environmentObject(model)
+        }
+        .windowResizability(.contentSize)
+        // .defaultLaunchBehavior(.suppressed)   // don't open at launch; opened on demand
     }
 }

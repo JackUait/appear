@@ -3,10 +3,15 @@
 A macOS menu-bar app: bind global keyboard shortcuts to applications and press
 one to jump to (activate/launch) that app.
 
-Click the menu-bar icon to open a native macOS popover (vibrancy background,
-system accent, light/dark adaptive) styled like System Settings: a grouped,
-selectable list of shortcuts with a +/− control. Add a binding by choosing
-modifiers, a key, and a target app, with a live preview before you commit.
+Built entirely from native macOS components. Two surfaces:
+
+- **Menu-bar popover** — a native `List` that doubles as a launcher: click any
+  row to jump to that app. "Edit Shortcuts…" opens the window.
+- **Standalone window** — a native `Table` (Application · Shortcut) with a
+  toolbar +/− control and a grouped `Form` sheet for adding a binding (checkbox
+  modifiers, `Picker`s for the key and app, a live preview). While the window is
+  open the app is a regular Dock app; it returns to a menu-bar agent on close.
+
 Bindings persist across launches; a fresh install seeds **⌃⌥S → Safari** and
 **⌃⌥F → Finder**.
 

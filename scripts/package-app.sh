@@ -19,7 +19,7 @@ APP_NAME="BetterTab"
 BUNDLE_ID="${BUNDLE_ID:-io.dodobrands.bettertab}"
 VERSION="${VERSION:-1.0}"
 BUILD="${BUILD:-1}"
-MIN_MACOS="${MIN_MACOS:-14.0}"
+MIN_MACOS="${MIN_MACOS:-15.0}"
 CONFIG="${CONFIG:-release}"
 
 # --- resolve paths ---------------------------------------------------------

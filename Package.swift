@@ -6,7 +6,7 @@ let swift5 = SwiftSetting.swiftLanguageMode(.v5)
 let package = Package(
     name: "BetterTab",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v15)
     ],
     targets: [
         .target(

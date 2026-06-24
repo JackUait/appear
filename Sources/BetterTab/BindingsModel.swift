@@ -1,6 +1,13 @@
 import Foundation
 import BetterTabCore
 
+/// Identifiable wrapper so a binding can drive `List`/`Table` selection.
+/// Combos are unique, so the combo description is a stable id.
+struct BindingItem: Identifiable, Hashable {
+    let binding: AppBinding
+    var id: String { binding.combo.description }
+}
+
 /// Observable source of truth for the UI. Owns the core objects, keeps the live
 /// hotkey registrations in sync with the edited list, and persists changes.
 @MainActor
@@ -50,6 +57,17 @@ final class BindingsModel: ObservableObject {
     func isBound(_ combo: KeyCombo) -> Bool {
         bindings.contains { $0.combo == combo }
     }
+
+    /// Immediately activates (or launches) a binding's target — used when the
+    /// user clicks a row in the launcher popover.
+    func jump(to binding: AppBinding) {
+        if activator.activateRunningApp(bundleID: binding.bundleID) { return }
+        guard let url = activator.applicationURL(bundleID: binding.bundleID) else { return }
+        try? activator.launchApplication(at: url)
+    }
+
+    /// Identifiable rows for `List`/`Table`.
+    var items: [BindingItem] { bindings.map(BindingItem.init) }
 
     /// Re-registers every hotkey from `next`, then persists. Sorted by app name.
     private func apply(_ next: [AppBinding]) {
