@@ -40,8 +40,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         )
     }
 
-    /// The menu-bar icon: the brand logo scaled to the menu-bar height (kept in
-    /// color, not a template), or the command glyph if the asset is missing.
+    /// The menu-bar icon: the brand logo's silhouette as a template image, so
+    /// macOS renders it monochrome (white on the dark menu bar) and adapts to
+    /// light/dark like every other system icon. Falls back to the command glyph.
     private static func menuBarIcon() -> NSImage? {
         guard let logo = Brand.logo else {
             return NSImage(systemSymbolName: "command", accessibilityDescription: "Appear")
@@ -53,7 +54,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         logo.draw(in: NSRect(origin: .zero, size: icon.size),
                   from: .zero, operation: .sourceOver, fraction: 1.0)
         icon.unlockFocus()
-        icon.isTemplate = false
+        // Template mode ignores the logo's colors and renders its alpha shape in
+        // the menu-bar tint — i.e. all white on the standard dark menu bar.
+        icon.isTemplate = true
         icon.accessibilityDescription = "Appear"
         return icon
     }
