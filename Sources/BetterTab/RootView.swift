@@ -8,6 +8,10 @@ struct RootView: View {
     @EnvironmentObject var model: BindingsModel
     @Environment(\.openWindow) private var openWindow
 
+    /// Closes the hosting popover. Injected by `StatusItemController` so the
+    /// view can dismiss without coupling to AppKit.
+    var closePopover: () -> Void = {}
+
     @State private var editingID: String?
     @State private var addingNew = false
 
@@ -134,6 +138,7 @@ struct RootView: View {
             Button {
                 close()
                 model.errorMessage = nil
+                model.isEditing = true
                 withAnimation(.snappy) { addingNew = true }
             } label: {
                 Label("Add Shortcut", systemImage: "plus")
@@ -154,11 +159,13 @@ struct RootView: View {
     private func startEditing(_ id: String) {
         model.errorMessage = nil
         addingNew = false
+        model.isEditing = true
         withAnimation(.snappy) { editingID = id }
     }
 
     private func close() {
         model.errorMessage = nil
+        model.isEditing = false
         withAnimation(.snappy) {
             editingID = nil
             addingNew = false
@@ -166,6 +173,8 @@ struct RootView: View {
     }
 
     private func openEditor() {
+        model.isEditing = false
+        closePopover()
         NSApp.setActivationPolicy(.regular)
         openWindow(id: "main")
         NSApp.activate(ignoringOtherApps: true)

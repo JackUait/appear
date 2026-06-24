@@ -15,6 +15,11 @@ final class BindingsModel: ObservableObject {
     @Published private(set) var bindings: [AppBinding] = []
     @Published var errorMessage: String?
 
+    /// True while an inline editor (add or edit) is open in the popover. The
+    /// status-item controller reads this to keep the popover from auto-closing
+    /// on outside clicks mid-edit.
+    @Published var isEditing = false
+
     private let store = BindingStore()
     private let registrar = CarbonHotKeyRegistrar()
     private let activator = WorkspaceAppActivator()

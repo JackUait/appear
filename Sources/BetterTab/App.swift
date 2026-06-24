@@ -3,28 +3,37 @@ import AppKit
 
 @main
 struct BetterTabApp: App {
-    @StateObject private var model = BindingsModel()
-
-    init() {
-        // Start as a menu-bar agent (no Dock icon). The standalone window
-        // promotes the app to a regular app while it's open.
-        NSApplication.shared.setActivationPolicy(.accessory)
-    }
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        MenuBarExtra {
-            RootView()
-                .environmentObject(model)
-        } label: {
-            Image(systemName: "command")
-        }
-        .menuBarExtraStyle(.window)
-
         Window("BetterTab", id: "main") {
             MainWindowView()
-                .environmentObject(model)
+                .environmentObject(appDelegate.model)
         }
         .windowResizability(.contentSize)
-        // .defaultLaunchBehavior(.suppressed)   // don't open at launch; opened on demand
+        // Launch as a menu-bar agent; the window opens on demand from the popover.
+        .defaultLaunchBehavior(.suppressed)
+    }
+}
+
+/// Owns the shared model and the menu-bar status item. Using an AppKit-managed
+/// status item (instead of `MenuBarExtra`) lets the popover stay open while the
+/// user edits a shortcut — see `StatusItemController`.
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    let model = BindingsModel()
+    private var statusController: StatusItemController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Start as a menu-bar agent (no Dock icon). The standalone window
+        // promotes the app to a regular app while it's open.
+        NSApp.setActivationPolicy(.accessory)
+        statusController = StatusItemController(model: model)
+    }
+
+    /// Keep the menu-bar agent alive when the popover or standalone window
+    /// closes — there is no `MenuBarExtra` scene holding the app open anymore.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 }
