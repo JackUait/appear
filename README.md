@@ -24,9 +24,19 @@ Bindings persist across launches; a fresh install seeds **⌃⌥S → Safari** a
 
 **Requirements:** macOS 15 (Sequoia) or later.
 
-Download and install with a single command — it fetches the latest release,
-clears the download quarantine so it opens without a Gatekeeper prompt, and
-launches it:
+### Homebrew (recommended)
+
+```bash
+brew install --cask jackuait/appear/appear
+```
+
+One trusted command, no Gatekeeper warnings — the cask clears the download
+quarantine on install, and `brew upgrade` keeps Appear current.
+
+### Manual download
+
+Fetch the latest release, clear the quarantine (so it opens without a Gatekeeper
+prompt), and launch — in one command:
 
 ```bash
 curl -L https://github.com/JackUait/appear/releases/latest/download/Appear.zip -o /tmp/Appear.zip \
@@ -35,17 +45,14 @@ curl -L https://github.com/JackUait/appear/releases/latest/download/Appear.zip -
   && open /Applications/Appear.app
 ```
 
-Prefer the GUI? Download **[Appear.zip](https://github.com/JackUait/appear/releases/latest/download/Appear.zip)**,
-unzip it, drag **Appear** to your Applications folder, then **right-click ▸ Open**
-the first time (Gatekeeper will let you confirm).
-
 The Appear logo appears in the menu bar (no Dock icon). Multi-key chord
 shortcuts (e.g. `L+R+G+N+M`) need Accessibility access — Appear prompts you and
 links straight to the setting.
 
-> **Note:** Appear isn't notarized by Apple yet, so a plain double-click shows a
-> Gatekeeper warning. The install command above clears the quarantine flag so it
-> opens cleanly. A fully notarized build (double-click, no warnings) is planned.
+> **Note:** Appear isn't notarized by Apple yet, so a plain double-click of the
+> downloaded app would show a Gatekeeper warning. Both install methods above
+> clear the quarantine flag so it opens cleanly. A fully notarized build
+> (double-click, zero warnings) is planned.
 
 ## Run from source
 
