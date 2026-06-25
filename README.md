@@ -1,4 +1,6 @@
-# Appear
+<p align="center">
+  <img src="Assets/AppearBrand.png" alt="Appear" width="360">
+</p>
 
 A macOS menu-bar app: bind global keyboard shortcuts to applications and press
 one to jump to (activate/launch) that app.
